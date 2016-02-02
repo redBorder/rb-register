@@ -1,0 +1,5 @@
+rb-register
+*.out
+*.coverprofile
+*.sublime-project
+*.sublime-workspace
