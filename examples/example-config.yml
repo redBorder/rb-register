@@ -1,0 +1,7 @@
+url: "http://localhost:8080"
+hash: "0000000000000000"
+sleep: 5000
+cpus: 4
+memory: 1024
+type: 31
+insecure: true
