@@ -93,7 +93,7 @@ func (c *ApiClient) Register() error {
 	// request structure for register method
 	type Request struct {
 		Order      string `json:"order"`
-		Cpu        int    `json:"cpus"`
+		Cpus       int    `json:"cpus"`
 		Memory     uint64 `json:"memory"`
 		DeviceType int    `json:"type"`
 		Hash       string `json:"hash"`
@@ -109,7 +109,7 @@ func (c *ApiClient) Register() error {
 	// Build the request
 	req := Request{
 		Order:      "register",
-		Cpu:        c.config.Cpus,
+		Cpus:       c.config.Cpus,
 		Memory:     c.config.Memory,
 		DeviceType: c.config.DeviceType,
 		Hash:       c.config.Hash,
@@ -135,6 +135,9 @@ func (c *ApiClient) Register() error {
 		return err
 	}
 	defer rawResponse.Body.Close()
+	if rawResponse.StatusCode >= 400 {
+		return errors.New("Got status code: " + rawResponse.Status)
+	}
 
 	// Read response to a buffer
 	bufferResponse, err := ioutil.ReadAll(rawResponse.Body)
@@ -190,7 +193,7 @@ func (c *ApiClient) Verify() error {
 	}
 
 	// Send request
-	log.Debugf("Sending register request")
+	log.Debugf("Sending verify request")
 	bufferReq := bytes.NewBuffer(marshalledReq)
 	httpReq, err := http.NewRequest("POST", c.config.Url, bufferReq)
 	if err != nil {
