@@ -26,7 +26,7 @@ var (
 	insecure   *bool   // If true, skip SSL verification
 	certPath   *string // Path to store de certificate
 
-	si  sysinfo.SI
+	si  *sysinfo.SI
 	log *logrus.Logger
 )
 
@@ -41,6 +41,8 @@ func init() {
 	certPath = flag.String("-cert", "/opt/rb/etc/chef/client.pem", "Certificate path")
 
 	flag.Parse()
+
+	si = sysinfo.Get()
 }
 
 func main() {
