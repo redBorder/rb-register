@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"io/ioutil"
 	"net/http"
 	"os"
+	"os/exec"
 	"runtime"
 
 	"github.com/Sirupsen/logrus"
@@ -21,7 +23,9 @@ var (
 	deviceType *int    // Type of the requesting device
 	insecure   *bool   // If true, skip SSL verification
 	certPath   *string // Path to store de certificate
-	si         sysinfo.SI
+
+	si  sysinfo.SI
+	log *logrus.Logger
 )
 
 // init parses flags
@@ -30,7 +34,7 @@ func init() {
 	url = flag.String("-url", "http://localhost", "Protocol and hostname to connect")
 	hash = flag.String("-hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
 	sleepTime = flag.Int("-sleep", 300, "Time between requests in seconds")
-	deviceType = flag.Int("-sleep", 300, "Time between requests in seconds")
+	deviceType = flag.Int("-device", 300, "Time between requests in seconds")
 	insecure = flag.Bool("-no-check-certificate", false, "Dont check if the certificate is valid")
 	certPath = flag.String("-cert", "/opt/rb/etc/chef/client.pem", "Certificate path")
 
@@ -40,7 +44,7 @@ func init() {
 func main() {
 
 	// Create new logger
-	log := logrus.New()
+	log = logrus.New()
 	if *debug {
 		log.Level = logrus.DebugLevel
 	}
@@ -80,5 +84,20 @@ func main() {
 
 	if err := ioutil.WriteFile(*certPath, []byte(cert), os.ModePerm); err != nil {
 		log.Errorf("Error saving certificate: %s", err.Error())
+	}
+
+	startChef()
+}
+
+func startChef() {
+	var out bytes.Buffer
+
+	cmd := `echo 'sh /opt/rb/bin/rb_register_finish.sh >> /var/log/rb-register/finish.log' | at now`
+	exe := exec.Command("sh", "-c", cmd)
+	exe.Stdout = &out
+
+	err := exe.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }
