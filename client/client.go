@@ -37,7 +37,7 @@ type Config struct {
 	Hash       string // Required hash to perform the registration
 	SleepTime  int    // Time between requests
 	Cpus       int    // Number of CPU of the computer
-	Memory     int64  // Amount of memory of the computer
+	Memory     uint64 // Amount of memory of the computer
 	DeviceType int    // Type of the requesting device
 	Insecure   bool   // If true, skip SSL verification
 
@@ -68,7 +68,7 @@ func (c *ApiClient) Register() error {
 	type request struct {
 		order      string `json:"order"`
 		cpu        int    `json:"cpus"`
-		memory     int64  `json:"memory"`
+		memory     uint64 `json:"memory"`
 		deviceType int    `json:"type"`
 		hash       string `json:"hash"`
 	}
