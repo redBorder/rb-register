@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"io/ioutil"
 	"net/http"
 	"time"
 
@@ -65,68 +66,72 @@ func NewApiClient(config Config) *ApiClient {
 func (c *ApiClient) Register() error {
 
 	// request structure for register method
-	type request struct {
-		order      string `json:"order"`
-		cpu        int    `json:"cpus"`
-		memory     uint64 `json:"memory"`
-		deviceType int    `json:"type"`
-		hash       string `json:"hash"`
+	type Request struct {
+		Order      string `json:"order"`
+		Cpu        int    `json:"cpus"`
+		Memory     uint64 `json:"memory"`
+		DeviceType int    `json:"type"`
+		Hash       string `json:"hash"`
 	}
 
 	// response structure for register method
-	type response struct {
-		status string `json:"status"`
-		hash   string `json:"hash"`
-		uuid   string `json:"uuid"`
+	type Response struct {
+		Status string `json:"status"`
+		Hash   string `json:"hash"`
+		Uuid   string `json:"uuid"`
 	}
 
 	// Build the request
-	req := request{
-		order:      "register",
-		cpu:        c.config.Cpus,
-		memory:     c.config.Memory,
-		deviceType: c.config.DeviceType,
-		hash:       c.config.Hash,
+	req := Request{
+		Order:      "register",
+		Cpu:        c.config.Cpus,
+		Memory:     c.config.Memory,
+		DeviceType: c.config.DeviceType,
+		Hash:       c.config.Hash,
 	}
 
 	// Generate a JSON message with the request
-	marshalledReq, err := json.Marshal(req)
+	marshalledReq, err := json.Marshal(&req)
 	if err != nil {
 		return err
 	}
 
-	// Send the JSON request until the registration procedure succeeds
-	for {
-		c.logger.Debugf("Sending register request")
-		bufferReq := bytes.NewBuffer(marshalledReq)
-		rawResponse, err := http.Post(c.config.Url, "application/json", bufferReq)
-		if err != nil {
-			return err
-		}
-		defer rawResponse.Body.Close()
-
-		// Read response to a buffer
-		var bufferResponse []byte
-		rawResponse.Body.Read(bufferResponse)
-
-		// Unmarshall the response
-		res := response{}
-		err = json.Unmarshal(bufferResponse, &res)
-		if err != nil {
-			return err
-		}
-
-		// Check response
-		if res.status == "registered" {
-			c.uuid = res.uuid
-			c.status = res.status
-			c.logger.Debugf("Got UUID: %s", c.uuid)
-			return nil
-		}
-
-		// Wait before the next request
-		time.Sleep(time.Duration(c.config.SleepTime) * time.Millisecond)
+	// Send request
+	log.Debugf("Sending register request")
+	bufferReq := bytes.NewBuffer(marshalledReq)
+	httpReq, err := http.NewRequest("POST", c.config.Url, bufferReq)
+	if err != nil {
+		return err
 	}
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	rawResponse, err := c.HttpClient.Do(httpReq)
+	if err != nil {
+		return err
+	}
+	defer rawResponse.Body.Close()
+
+	// Read response to a buffer
+	bufferResponse, err := ioutil.ReadAll(rawResponse.Body)
+	if err != nil {
+		return err
+	}
+
+	// Unmarshall the response
+	res := Response{}
+	err = json.Unmarshal(bufferResponse, &res)
+	if err != nil {
+		return err
+	}
+
+	// Check response
+	if res.Status == "registered" {
+		c.uuid = res.Uuid
+		c.status = res.Status
+		log.Debugf("Got UUID: %s", c.uuid)
+	}
+
+	return nil
 }
 
 // Verify send the UUID along with the HASH to the API and expect to receive
@@ -135,22 +140,22 @@ func (c *ApiClient) Verify() error {
 
 	// request structure for register method
 	type request struct {
-		order string `json:"order"`
-		hash  string `json:"hash"`
-		uuid  string `json:"uuid"`
+		Order string `json:"order"`
+		Hash  string `json:"hash"`
+		Uuid  string `json:"uuid"`
 	}
 
 	// response structure for register method
 	type response struct {
-		status string `json:"status"`
-		cert   string `json:"cert"`
+		Status string `json:"status"`
+		Cert   string `json:"cert"`
 	}
 
 	// Build the request
 	req := request{
-		order: "verify",
-		hash:  c.config.Hash,
-		uuid:  c.uuid,
+		Order: "verify",
+		Hash:  c.config.Hash,
+		Uuid:  c.uuid,
 	}
 
 	// Generate a JSON message with the request
@@ -159,44 +164,65 @@ func (c *ApiClient) Verify() error {
 		return err
 	}
 
-	// Send the JSON request until the registration procedure succeeds
-	for {
-		c.logger.Debugf("Sending verify request")
-		bufferReq := bytes.NewBuffer(marshalledReq)
-		rawResponse, err := http.Post(c.config.Url, "application/json", bufferReq)
-		if err != nil {
-			return err
-		}
-		defer rawResponse.Body.Close()
+	// Send request
+	log.Debugf("Sending register request")
+	bufferReq := bytes.NewBuffer(marshalledReq)
+	httpReq, err := http.NewRequest("POST", c.config.Url, bufferReq)
+	if err != nil {
+		return err
+	}
+	httpReq.Header.Set("Content-Type", "application/json")
 
-		// Read response to a buffer
-		var bufferResponse []byte
-		rawResponse.Body.Read(bufferResponse)
+	rawResponse, err := c.HttpClient.Do(httpReq)
+	if err != nil {
+		return err
+	}
+	defer rawResponse.Body.Close()
 
-		// Unmarshall the response
-		res := response{}
-		err = json.Unmarshal(bufferResponse, &res)
-		if err != nil {
-			return err
-		}
+	// Read response to a buffer
+	bufferResponse, err := ioutil.ReadAll(rawResponse.Body)
+	if err != nil {
+		return err
+	}
 
-		// Check response
-		switch res.status {
-		case "registered":
-			c.logger.Debugf("Waiting to be claimed")
-			break
-		case "claimed":
-			c.cert = res.cert
-			c.status = res.status
-			c.logger.Debugf("Got certificate")
-			return nil
-			break
-		default:
-			c.logger.Warnf("Unknow response status: %s", res.status)
-		}
+	// Unmarshall the response
+	res := response{}
+	err = json.Unmarshal(bufferResponse, &res)
+	if err != nil {
+		return err
+	}
 
-		// Wait before the next request
-		time.Sleep(time.Duration(c.config.SleepTime) * time.Millisecond)
+	// Check response
+	switch res.Status {
+	case "registered":
+		log.Debugf("Waiting to be claimed")
+		break
+	case "claimed":
+		c.cert = res.Cert
+		c.status = res.Status
+		log.Debugf("Got certificate")
+		break
+	default:
+		log.Warnf("Unknow response status: %s", res.Status)
+		break
+	}
+
+	return nil
+}
+
+func (c *ApiClient) IsRegistered() bool {
+	if c.status == "registered" {
+		return true
+	} else {
+		return false
+	}
+}
+
+func (c *ApiClient) IsClaimed() bool {
+	if c.status == "claimed" {
+		return true
+	} else {
+		return false
 	}
 }
 
