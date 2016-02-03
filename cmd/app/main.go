@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"database/sql"
 	"flag"
 	"io/ioutil"
 	"net/http"
@@ -14,8 +15,10 @@ import (
 	"github.com/Sirupsen/logrus"
 	"github.com/capnm/sysinfo"
 	"github.com/codeskyblue/go-sh"
+	_ "github.com/mattn/go-sqlite3"
 
 	"redborder/rb-register-2/client"
+	"redborder/rb-register-2/database"
 )
 
 var (
@@ -26,6 +29,7 @@ var (
 	deviceType *int    // Type of the requesting device
 	insecure   *bool   // If true, skip SSL verification
 	certFile   *string // Path to store de certificate
+	dbFile     *string // File to persist the state
 
 	si  *sysinfo.SI
 	log *logrus.Logger
@@ -40,6 +44,7 @@ func init() {
 	deviceType = flag.Int("type", 0, "Type of the registering device")
 	insecure = flag.Bool("no-check-certificate", false, "Dont check if the certificate is valid")
 	certFile = flag.String("cert", "/opt/rb/etc/chef/client.pem", "Certificate file")
+	dbFile = flag.String("db", "", "File to persist the state")
 
 	flag.Parse()
 
@@ -47,6 +52,7 @@ func init() {
 }
 
 func main() {
+	var db *database.Database
 
 	// Create new logger
 	log = logrus.New()
@@ -58,6 +64,17 @@ func main() {
 	if *deviceType == 0 {
 		flag.Usage()
 		log.Fatal("You must provide a device type")
+	}
+
+	// Load database if neccesary
+	if dbFile != nil {
+		sqldb, err := sql.Open("sqlite3", *dbFile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer sqldb.Close()
+
+		db = database.NewDatabase(sqldb)
 	}
 
 	// Create a new HTTP Client
@@ -79,23 +96,29 @@ func main() {
 			Memory:     si.TotalRam,
 			DeviceType: *deviceType,
 			Debug:      *debug,
-		}, httpClient)
+		}, httpClient, db)
 
-	// Try to register with the API
-	log.Infof("Registering...")
-	for !apiClient.IsRegistered() {
-		if err := apiClient.Register(); err != nil {
-			log.Fatalf("Error registering device: %s", err)
-		}
+	// Check if exists an UUID stored on DB
+	if db != nil && apiClient.IsRegistered() {
+		log.Infof("Loaded UUID from DB")
+	} else {
+		// No previous UUID, try to register
+		for {
+			if err := apiClient.Register(); err != nil {
+				log.Fatalf("Error registering device: %s", err)
+			}
 
-		if !apiClient.IsRegistered() {
-			time.Sleep(time.Duration(*sleepTime) * time.Second)
+			if apiClient.IsRegistered() {
+				log.Infof("Registered!")
+				break
+			} else {
+				time.Sleep(time.Duration(*sleepTime) * time.Second)
+			}
 		}
 	}
-	log.Infof("Registered!")
 
 	// Start verification process. Finish when the device is claimed
-	log.Infof("Verifying...")
+	log.Infof("Requesting certificate")
 	for !apiClient.IsClaimed() {
 		if err := apiClient.Verify(); err != nil {
 			log.Fatalf("Error registering device: %s", err)
@@ -103,9 +126,10 @@ func main() {
 
 		if !apiClient.IsClaimed() {
 			time.Sleep(time.Duration(*sleepTime) * time.Second)
+		} else {
+			log.Infof("Claimed!")
 		}
 	}
-	log.Infof("Claimed!")
 
 	cert, err := apiClient.GetCertificate()
 	if err != nil {
