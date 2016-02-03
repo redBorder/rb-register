@@ -1,18 +1,19 @@
 package main
 
 import (
-	"bytes"
 	"crypto/tls"
 	"flag"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
+	"os/signal"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/capnm/sysinfo"
+	"github.com/codeskyblue/go-sh"
 
 	"redborder/rb-register-2/client"
 )
@@ -24,7 +25,7 @@ var (
 	sleepTime  *int    // Time between requests
 	deviceType *int    // Type of the requesting device
 	insecure   *bool   // If true, skip SSL verification
-	certPath   *string // Path to store de certificate
+	certFile   *string // Path to store de certificate
 
 	si  *sysinfo.SI
 	log *logrus.Logger
@@ -32,13 +33,13 @@ var (
 
 // init parses flags
 func init() {
-	debug = flag.Bool("-debug", false, "Show debug info")
-	url = flag.String("-url", "http://localhost", "Protocol and hostname to connect")
-	hash = flag.String("-hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
-	sleepTime = flag.Int("-sleep", 300, "Time between requests in seconds")
-	deviceType = flag.Int("-device", 300, "Time between requests in seconds")
-	insecure = flag.Bool("-no-check-certificate", false, "Dont check if the certificate is valid")
-	certPath = flag.String("-cert", "/opt/rb/etc/chef/client.pem", "Certificate path")
+	debug = flag.Bool("debug", false, "Show debug info")
+	url = flag.String("url", "http://localhost", "Protocol and hostname to connect")
+	hash = flag.String("hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
+	sleepTime = flag.Int("sleep", 300, "Time between requests in seconds")
+	deviceType = flag.Int("type", 0, "Type of the registering device")
+	insecure = flag.Bool("no-check-certificate", false, "Dont check if the certificate is valid")
+	certFile = flag.String("cert", "/opt/rb/etc/chef/client.pem", "Certificate file")
 
 	flag.Parse()
 
@@ -53,6 +54,13 @@ func main() {
 		log.Level = logrus.DebugLevel
 	}
 
+	// Check device type arg
+	if *deviceType == 0 {
+		flag.Usage()
+		log.Fatal("You must provide a device type")
+	}
+
+	// Create a new HTTP Client
 	var httpClient *http.Client
 	if *insecure {
 		httpClient = &http.Client{Transport: &http.Transport{
@@ -74,24 +82,28 @@ func main() {
 		}, httpClient)
 
 	// Try to register with the API
-	log.Infof("Registering")
+	log.Infof("Registering...")
 	for !apiClient.IsRegistered() {
 		if err := apiClient.Register(); err != nil {
 			log.Fatalf("Error registering device: %s", err)
 		}
 
-		time.Sleep(time.Duration(*sleepTime) * time.Second)
+		if !apiClient.IsRegistered() {
+			time.Sleep(time.Duration(*sleepTime) * time.Second)
+		}
 	}
 	log.Infof("Registered!")
 
 	// Start verification process. Finish when the device is claimed
-	log.Infof("Verifying")
+	log.Infof("Verifying...")
 	for !apiClient.IsClaimed() {
 		if err := apiClient.Verify(); err != nil {
 			log.Fatalf("Error registering device: %s", err)
 		}
 
-		time.Sleep(time.Duration(*sleepTime) * time.Second)
+		if !apiClient.IsClaimed() {
+			time.Sleep(time.Duration(*sleepTime) * time.Second)
+		}
 	}
 	log.Infof("Claimed!")
 
@@ -100,22 +112,19 @@ func main() {
 		log.Errorf("Error getting certificate: %s", err)
 	}
 
-	if err := ioutil.WriteFile(*certPath, []byte(cert), os.ModePerm); err != nil {
+	cert = strings.Replace(cert, "\\n", "\n", -1)
+	cert = strings.Replace(cert, `"`, ``, -1)
+
+	if err := ioutil.WriteFile(*certFile, []byte(cert), os.ModePerm); err != nil {
 		log.Errorf("Error saving certificate: %s", err.Error())
 	}
 
-	startChef()
-}
+	// Launch chef client
+	sh.Echo("sh /opt/rb/bin/rb_register_finish.sh >> /var/log/rb-register/finish.log").Command("at", "now").Run()
+	log.Infof("Chef called")
 
-func startChef() {
-	var out bytes.Buffer
+	ctrlc := make(chan os.Signal, 1)
+	signal.Notify(ctrlc, os.Interrupt)
 
-	cmd := `echo 'sh /opt/rb/bin/rb_register_finish.sh >> /var/log/rb-register/finish.log' | at now`
-	exe := exec.Command("sh", "-c", cmd)
-	exe.Stdout = &out
-
-	err := exe.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	<-ctrlc
 }
