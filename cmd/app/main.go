@@ -5,77 +5,57 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"runtime"
 
 	"github.com/Sirupsen/logrus"
-	"gopkg.in/yaml.v2"
+	"github.com/capnm/sysinfo"
 
 	"redborder/rb-register-2/client"
 )
 
-const (
-	AP          = 20
-	PROXY       = 31
-	IPS         = 32
-	IPS_GENERIC = 33
-)
-
 var (
-	log        *logrus.Logger
-	debug      bool
-	configFile string
+	debug      *bool
+	url        *string // API url
+	hash       *string // Required hash to perform the registration
+	sleepTime  *int    // Time between requests
+	deviceType *int    // Type of the requesting device
+	insecure   *bool   // If true, skip SSL verification
+	certPath   *string // Path to store de certificate
+	si         sysinfo.SI
 )
 
-type Config struct {
-	Url        string `yaml:"url"`      // API url
-	Hash       string `yaml:"hash"`     // Required hash to perform the registration
-	SleepTime  int    `yaml:"sleep"`    // Time between requests
-	Cpus       int    `yaml:"cpus"`     // Number of CPU of the computer
-	Memory     int64  `yaml:"memory"`   // Amount of memory of the computer
-	DeviceType int    `yaml:"type"`     // Type of the requesting device
-	Insecure   bool   `yaml:"insecure"` // If true, skip SSL verification
-	CertPath   string `yaml:"certpath"` // If true, skip SSL verification
-}
-
-// init parses flags and initializes logger
+// init parses flags
 func init() {
-	configFileFlag := flag.String("config", "", "Config file")
-	debugFlag := flag.Bool("debug", false, "Show debug info")
+	debug = flag.Bool("-debug", false, "Show debug info")
+	url = flag.String("-url", "http://localhost", "Protocol and hostname to connect")
+	hash = flag.String("-hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
+	sleepTime = flag.Int("-sleep", 300, "Time between requests in seconds")
+	deviceType = flag.Int("-sleep", 300, "Time between requests in seconds")
+	insecure = flag.Bool("-no-check-certificate", false, "Dont check if the certificate is valid")
+	certPath = flag.String("-cert", "/opt/rb/etc/chef/client.pem", "Certificate path")
 
 	flag.Parse()
-
-	debug = *debugFlag
-
-	log = logrus.New()
-	if debug {
-		log.Level = logrus.DebugLevel
-	}
-
-	if len(*configFileFlag) == 0 {
-		flag.Usage()
-		log.Fatal("No config file provided")
-	}
-	configFile = *configFileFlag
 }
 
 func main() {
 
-	// Load the config file
-	config, err := loadConfigFile(configFile)
-	if err != nil {
-		log.Fatalf("Error reading configuration file: %s", err.Error())
+	// Create new logger
+	log := logrus.New()
+	if *debug {
+		log.Level = logrus.DebugLevel
 	}
 
 	// Create a new API client config for handle the connection with the API
 	apiClient := client.NewApiClient(
 		client.Config{
-			Url:        config.Url,
-			Hash:       config.Hash,
-			SleepTime:  config.SleepTime,
-			Cpus:       config.Cpus,
-			Memory:     config.Memory,
-			DeviceType: config.DeviceType,
-			Insecure:   config.Insecure,
-			Debug:      debug,
+			Url:        *url,
+			Hash:       *hash,
+			SleepTime:  *sleepTime,
+			Cpus:       runtime.NumCPU(),
+			Memory:     si.TotalRam,
+			DeviceType: *deviceType,
+			Insecure:   *insecure,
+			Debug:      *debug,
 			HttpClient: &http.Client{},
 		})
 
@@ -98,23 +78,7 @@ func main() {
 		log.Errorf("Error getting certificate: %s", err)
 	}
 
-	if err := ioutil.WriteFile(config.CertPath, []byte(cert), os.ModePerm); err != nil {
+	if err := ioutil.WriteFile(*certPath, []byte(cert), os.ModePerm); err != nil {
 		log.Errorf("Error saving certificate: %s", err.Error())
 	}
-}
-
-// loadConfigFile opens a configuration YAML file and parse the content to a
-// structure.
-func loadConfigFile(configFile string) (config Config, err error) {
-	configData, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return
-	}
-
-	err = yaml.Unmarshal([]byte(configData), &config)
-	if err != nil {
-		return
-	}
-
-	return
 }
