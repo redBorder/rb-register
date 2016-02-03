@@ -1,13 +1,14 @@
 package main
 
 import (
-	"bytes"
+	"crypto/tls"
 	"flag"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"runtime"
+	"time"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/capnm/sysinfo"
@@ -49,33 +50,47 @@ func main() {
 		log.Level = logrus.DebugLevel
 	}
 
+	var httpClient *http.Client
+	if *insecure {
+		httpClient = &http.Client{Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}}
+	} else {
+		httpClient = &http.Client{}
+	}
+
 	// Create a new API client config for handle the connection with the API
 	apiClient := client.NewApiClient(
 		client.Config{
 			Url:        *url,
 			Hash:       *hash,
-			SleepTime:  *sleepTime,
 			Cpus:       runtime.NumCPU(),
 			Memory:     si.TotalRam,
 			DeviceType: *deviceType,
-			Insecure:   *insecure,
 			Debug:      *debug,
-			HttpClient: &http.Client{},
-		})
+		}, httpClient)
 
 	// Try to register with the API
 	log.Infof("Registering")
-	if err := apiClient.Register(); err != nil {
-		log.Fatalf("Error registering device: %s", err)
+	for !apiClient.IsRegistered() {
+		if err := apiClient.Register(); err != nil {
+			log.Fatalf("Error registering device: %s", err)
+		}
+
+		time.Sleep(time.Duration(*sleepTime) * time.Second)
 	}
 	log.Infof("Registered!")
 
 	// Start verification process. Finish when the device is claimed
 	log.Infof("Verifying")
-	if err := apiClient.Verify(); err != nil {
-		log.Fatalf("Error verifiyin device: %s", err)
+	for !apiClient.IsClaimed() {
+		if err := apiClient.Verify(); err != nil {
+			log.Fatalf("Error registering device: %s", err)
+		}
+
+		time.Sleep(time.Duration(*sleepTime) * time.Second)
 	}
-	log.Infof("Verified!")
+	log.Infof("Claimed!")
 
 	cert, err := apiClient.GetCertificate()
 	if err != nil {
