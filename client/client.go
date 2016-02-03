@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/Sirupsen/logrus"
+	"redborder/rb-register-2/database"
 )
 
 type Registerer interface {
@@ -26,6 +27,7 @@ type ApiClient struct {
 	uuid       string // The UUID that the application should obtain
 	cert       string // Client certificate
 	HttpClient *http.Client
+	db         *database.Database
 
 	// Configuration
 	config Config
@@ -44,9 +46,15 @@ type Config struct {
 var log *logrus.Logger
 
 // NewApiClient creates a new instance of an ApiClient object
-func NewApiClient(config Config, httpClient *http.Client) *ApiClient {
+func NewApiClient(config Config, httpClient *http.Client, db *database.Database) *ApiClient {
 	log = logrus.New()
 
+	// Show debuf info
+	if config.Debug {
+		log.Level = logrus.DebugLevel
+	}
+
+	// Check if the configuration is ok
 	if len(config.Url) == 0 {
 		log.Errorf("Url not provided")
 		return nil
@@ -72,15 +80,28 @@ func NewApiClient(config Config, httpClient *http.Client) *ApiClient {
 		return nil
 	}
 
+	// Create instance of ApiClient
 	c := &ApiClient{
 		status:     "registering",
 		HttpClient: httpClient,
 		config:     config,
 	}
 
-	// Show debuf info
-	if c.config.Debug {
-		log.Level = logrus.DebugLevel
+	// If a DB has been provided try to find the hash on it
+	if db != nil {
+		c.db = db
+		uuid, err := c.db.LoadUuid(config.Hash)
+		if err != nil {
+			log.Error("Error loading UUID from DB")
+			return nil
+		}
+
+		// If the provided hash is already on database, load the associated UUID
+		// and set status to registered
+		if len(uuid) > 0 {
+			c.uuid = uuid
+			c.status = "registered"
+		}
 	}
 
 	return c
@@ -89,6 +110,10 @@ func NewApiClient(config Config, httpClient *http.Client) *ApiClient {
 // Register send a POST request with some fields to the remote API. It expects
 // a UUID from the API.
 func (c *ApiClient) Register() error {
+
+	if c.status == "registered" {
+		return errors.New("This device is already registered")
+	}
 
 	// request structure for register method
 	type Request struct {
@@ -157,6 +182,9 @@ func (c *ApiClient) Register() error {
 		c.uuid = res.Uuid
 		c.status = res.Status
 		log.Debugf("Got UUID: %s", c.uuid)
+		if c.db != nil {
+			c.db.StoreUuid(c.config.Hash, res.Uuid)
+		}
 	}
 
 	return nil
@@ -165,6 +193,10 @@ func (c *ApiClient) Register() error {
 // Verify send the UUID along with the HASH to the API and expect to receive
 // a client certificate
 func (c *ApiClient) Verify() error {
+
+	if c.status == "claimed" {
+		return errors.New("This device is already claimed")
+	}
 
 	// request structure for register method
 	type request struct {
@@ -231,7 +263,7 @@ func (c *ApiClient) Verify() error {
 		log.Debugf("Got certificate")
 		break
 	default:
-		log.Warnf("Unknow response status: %s", res.Status)
+		log.Warnf("Unknow response: %s", res)
 		break
 	}
 
