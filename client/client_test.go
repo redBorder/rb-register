@@ -105,7 +105,7 @@ func getTestHttpClient(handler http.HandlerFunc) (server *httptest.Server, clien
 // Test empty configuration structure
 func Test_InvalidConfig1(t *testing.T) {
 	server, client := getTestHttpClient(registeredHandlerFunc)
-	apiClient := NewApiClient(Config{}, client)
+	apiClient := NewApiClient(Config{}, client, nil)
 	defer server.Close()
 
 	assert.Nil(t, apiClient, "apiClient should be nil")
@@ -120,7 +120,7 @@ func Test_InvalidConfig2(t *testing.T) {
 		Memory:     1024,
 		DeviceType: 1,
 		Debug:      false,
-	}, client)
+	}, client, nil)
 	defer server.Close()
 
 	assert.Nil(t, apiClient, "apiClient should be nil")
@@ -135,7 +135,7 @@ func Test_InvalidConfig3(t *testing.T) {
 		Memory:     1024,
 		DeviceType: 1,
 		Debug:      false,
-	}, client)
+	}, client, nil)
 	defer server.Close()
 
 	assert.Nil(t, apiClient, "apiClient should be nil")
@@ -150,7 +150,7 @@ func Test_InvalidConfig4(t *testing.T) {
 		Hash:       "abcdefghijklmnopqrstuvwxyz",
 		DeviceType: 1,
 		Debug:      false,
-	}, client)
+	}, client, nil)
 	defer server.Close()
 
 	assert.Nil(t, apiClient, "apiClient should be nil")
@@ -165,7 +165,7 @@ func Test_InvalidConfig5(t *testing.T) {
 		Hash:   "abcdefghijklmnopqrstuvwxyz",
 		Memory: 1024,
 		Debug:  false,
-	}, client)
+	}, client, nil)
 	defer server.Close()
 
 	assert.Nil(t, apiClient, "apiClient should be nil")
@@ -173,7 +173,7 @@ func Test_InvalidConfig5(t *testing.T) {
 
 // Test nil http client
 func Test_InvalidHttpClient(t *testing.T) {
-	apiClient := NewApiClient(validConfig, nil)
+	apiClient := NewApiClient(validConfig, nil, nil)
 
 	assert.Nil(t, apiClient, "apiClient should be nil")
 }
@@ -181,7 +181,7 @@ func Test_InvalidHttpClient(t *testing.T) {
 // Test a valid configuration and http client
 func Test_ValidConfig(t *testing.T) {
 	server, client := getTestHttpClient(registeredHandlerFunc)
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 	defer server.Close()
 
 	assert.NotNil(t, apiClient, "apiClient should be not nil")
@@ -190,7 +190,7 @@ func Test_ValidConfig(t *testing.T) {
 // Test register success
 func Test_Register_Success(t *testing.T) {
 	server, client := getTestHttpClient(registeredHandlerFunc)
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 	defer server.Close()
 
 	err := apiClient.Register()
@@ -203,7 +203,7 @@ func Test_Register_Success(t *testing.T) {
 // Test register success
 func Test_Register_Fail(t *testing.T) {
 	server, client := getTestHttpClient(unRegisteredHandlerFunc)
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 	defer server.Close()
 
 	err := apiClient.Register()
@@ -217,7 +217,7 @@ func Test_Register_Fail(t *testing.T) {
 func Test_Register_Success_after_fail(t *testing.T) {
 	var err error
 	server, client := getTestHttpClient(unRegisteredHandlerFunc)
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 
 	err = apiClient.Register()
 
@@ -242,7 +242,7 @@ func Test_Verify_Success_Not_Claimed(t *testing.T) {
 	var err error
 	server, client := getTestHttpClient(waitingClaimHandlerFunc)
 	defer server.Close()
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 
 	apiClient.status = "registered"
 	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
@@ -259,7 +259,7 @@ func Test_Verify_Success_Claimed(t *testing.T) {
 	var err error
 	server, client := getTestHttpClient(claimedHandlerFunc)
 	defer server.Close()
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 
 	apiClient.status = "registered"
 	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
@@ -276,7 +276,7 @@ func Test_Verify_Unknown_Response(t *testing.T) {
 	var err error
 	server, client := getTestHttpClient(unknownResponseHandlerFunc)
 	defer server.Close()
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 
 	apiClient.status = "registered"
 	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
@@ -293,7 +293,7 @@ func Test_Verify_Invalid_JSON(t *testing.T) {
 	var err error
 	server, client := getTestHttpClient(wrongJsonHandlerFunc)
 	defer server.Close()
-	apiClient := NewApiClient(validConfig, client)
+	apiClient := NewApiClient(validConfig, client, nil)
 
 	apiClient.status = "registered"
 	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
@@ -307,7 +307,7 @@ func Test_Verify_Invalid_JSON(t *testing.T) {
 
 func Test_IsRegistered(t *testing.T) {
 	var result bool
-	apiClient := NewApiClient(validConfig, &http.Client{})
+	apiClient := NewApiClient(validConfig, &http.Client{}, nil)
 	apiClient.status = "registered"
 
 	result = apiClient.IsRegistered()
@@ -322,7 +322,7 @@ func Test_IsRegistered(t *testing.T) {
 
 func Test_IsClaimed(t *testing.T) {
 	var result bool
-	apiClient := NewApiClient(validConfig, &http.Client{})
+	apiClient := NewApiClient(validConfig, &http.Client{}, nil)
 	apiClient.status = "claimed"
 
 	result = apiClient.IsClaimed()
@@ -337,7 +337,7 @@ func Test_IsClaimed(t *testing.T) {
 
 // Test get certificate success when claimed
 func Test_GetCertificate_Success(t *testing.T) {
-	apiClient := NewApiClient(validConfig, &http.Client{})
+	apiClient := NewApiClient(validConfig, &http.Client{}, nil)
 
 	apiClient.status = "claimed"
 	apiClient.cert = certificate
@@ -350,7 +350,7 @@ func Test_GetCertificate_Success(t *testing.T) {
 
 // Test get certificate fail when not yet claimed
 func Test_GetCertificate_Fail(t *testing.T) {
-	apiClient := NewApiClient(validConfig, &http.Client{})
+	apiClient := NewApiClient(validConfig, &http.Client{}, nil)
 
 	apiClient.status = "not claimed"
 	apiClient.cert = certificate
