@@ -6,7 +6,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"time"
 
 	"github.com/Sirupsen/logrus"
 )
@@ -23,10 +22,10 @@ type Verifier interface {
 type ApiClient struct {
 
 	// Attributes
-	status string         // Current status of the registrtation
-	uuid   string         // The UUID that the application should obtain
-	cert   string         // Client certificate
-	logger *logrus.Logger // Logger
+	status     string // Current status of the registrtation
+	uuid       string // The UUID that the application should obtain
+	cert       string // Client certificate
+	HttpClient *http.Client
 
 	// Configuration
 	config Config
@@ -36,26 +35,52 @@ type ApiClient struct {
 type Config struct {
 	Url        string // API url
 	Hash       string // Required hash to perform the registration
-	SleepTime  int    // Time between requests
 	Cpus       int    // Number of CPU of the computer
 	Memory     uint64 // Amount of memory of the computer
 	DeviceType int    // Type of the requesting device
-	Insecure   bool   // If true, skip SSL verification
-
-	HttpClient *http.Client
-	Debug      bool
+	Debug      bool   // Show debug info
 }
 
+var log *logrus.Logger
+
 // NewApiClient creates a new instance of an ApiClient object
-func NewApiClient(config Config) *ApiClient {
-	c := &ApiClient{
-		status: "registering",
-		logger: logrus.New(),
-		config: config,
+func NewApiClient(config Config, httpClient *http.Client) *ApiClient {
+	log = logrus.New()
+
+	if len(config.Url) == 0 {
+		log.Errorf("Url not provided")
+		return nil
+	}
+	if len(config.Hash) == 0 {
+		log.Errorf("Hash not provided")
+		return nil
+	}
+	if config.Cpus == 0 {
+		log.Errorf("CPU number not provided")
+		return nil
+	}
+	if config.Memory == 0 {
+		log.Errorf("Memory not provided")
+		return nil
+	}
+	if config.DeviceType == 0 {
+		log.Errorf("Device type not provided")
+		return nil
+	}
+	if httpClient == nil {
+		log.Errorf("Invalid HTTP client")
+		return nil
 	}
 
+	c := &ApiClient{
+		status:     "registering",
+		HttpClient: httpClient,
+		config:     config,
+	}
+
+	// Show debuf info
 	if c.config.Debug {
-		c.logger.Level = logrus.DebugLevel
+		log.Level = logrus.DebugLevel
 	}
 
 	return c
