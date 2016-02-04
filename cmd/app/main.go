@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -31,7 +32,7 @@ var (
 	url        *string // API url
 	hash       *string // Required hash to perform the registration
 	sleepTime  *int    // Time between requests
-	deviceType *int    // Type of the requesting device
+	deviceType int     // Type of the requesting device
 	insecure   *bool   // If true, skip SSL verification
 	certFile   *string // Path to store de certificate
 	dbFile     *string // File to persist the state
@@ -43,13 +44,20 @@ var (
 	log *logrus.Logger
 )
 
+var deviceAlias = map[string]int{
+	"AP":          20,
+	"PROXY":       31,
+	"IPS":         32,
+	"IPS_GENERIC": 33,
+}
+
 // init parses flags
 func init() {
 	debug = flag.Bool("debug", false, "Show debug info")
 	url = flag.String("url", "http://localhost", "Protocol and hostname to connect")
 	hash = flag.String("hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
 	sleepTime = flag.Int("sleep", 300, "Time between requests in seconds")
-	deviceType = flag.Int("type", 0, "Type of the registering device")
+	deviceTypeFlag := flag.String("type", "", "Type of the registering device")
 	insecure = flag.Bool("no-check-certificate", false, "Dont check if the certificate is valid")
 	certFile = flag.String("cert", "/opt/rb/etc/chef/client.pem", "Certificate file")
 	dbFile = flag.String("db", "", "File to persist the state")
@@ -66,9 +74,19 @@ func init() {
 	}
 
 	// Check device type arg
-	if *deviceType == 0 {
+	if len(*deviceTypeFlag) == 0 {
 		flag.Usage()
 		log.Fatal("You must provide a device type")
+	}
+
+	var err error
+	if deviceAlias[*deviceTypeFlag] != 0 {
+		deviceType = deviceAlias[*deviceTypeFlag]
+	} else {
+		deviceType, err = strconv.Atoi(*deviceTypeFlag)
+		if err != nil {
+			log.Fatal("Invalid device type")
+		}
 	}
 
 	si = sysinfo.Get()
@@ -129,7 +147,7 @@ func main() {
 			Hash:       *hash,
 			Cpus:       runtime.NumCPU(),
 			Memory:     si.TotalRam,
-			DeviceType: *deviceType,
+			DeviceType: deviceType,
 			Debug:      *debug,
 		}, httpClient, db)
 
