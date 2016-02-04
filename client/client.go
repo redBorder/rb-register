@@ -255,11 +255,7 @@ func (c *ApiClient) Verify() error {
 	case "claimed":
 		c.cert = res.Cert
 		c.status = res.Status
-		if len(res.Nodename) != 0 {
-			c.nodename = res.Nodename
-		} else {
-			log.Warnf("Nodename not received")
-		}
+		c.nodename = res.Nodename
 		log.Debugf("Got certificate")
 		break
 	default:
