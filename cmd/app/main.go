@@ -18,6 +18,10 @@ import (
 	"redborder/rb-register-2/client"
 )
 
+const (
+	NODE_NAME = "/opt/rb/etc/chef/nodename"
+)
+
 var (
 	debug      *bool
 	url        *string // API url
@@ -107,16 +111,24 @@ func main() {
 	}
 	log.Infof("Claimed!")
 
+	// Get the certificate
 	cert, err := apiClient.GetCertificate()
 	if err != nil {
 		log.Errorf("Error getting certificate: %s", err)
 	}
-
 	cert = strings.Replace(cert, "\\n", "\n", -1)
 	cert = strings.Replace(cert, `"`, ``, -1)
 
+	// Save the certificate to a file
 	if err := ioutil.WriteFile(*certFile, []byte(cert), os.ModePerm); err != nil {
 		log.Errorf("Error saving certificate: %s", err.Error())
+	}
+
+	// Get nodename and save it to a file
+	if nodename, err := apiClient.GetNodename(); err != nil {
+		if err := ioutil.WriteFile(NODE_NAME, []byte(nodename), os.ModePerm); err != nil {
+			log.Errorf("Error saving nodename: %s", err.Error())
+		}
 	}
 
 	// Launch chef client

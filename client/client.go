@@ -10,13 +10,6 @@ import (
 	"github.com/Sirupsen/logrus"
 )
 
-type Registerer interface {
-	Register()
-}
-type Verifier interface {
-	Verify()
-}
-
 // ApiClient is an objet that can communicate with the API to perform a
 // registration. It has the necessary methods to interact with the API.
 type ApiClient struct {
@@ -25,6 +18,7 @@ type ApiClient struct {
 	status     string // Current status of the registrtation
 	uuid       string // The UUID that the application should obtain
 	cert       string // Client certificate
+	nodename   string // Name of the node received along with the cert
 	HttpClient *http.Client
 
 	// Configuration
@@ -175,8 +169,9 @@ func (c *ApiClient) Verify() error {
 
 	// response structure for register method
 	type response struct {
-		Status string `json:"status"`
-		Cert   string `json:"cert"`
+		Status   string `json:"status"`
+		Cert     string `json:"cert"`
+		Nodename string `json:"nodename"`
 	}
 
 	// Build the request
@@ -228,6 +223,11 @@ func (c *ApiClient) Verify() error {
 	case "claimed":
 		c.cert = res.Cert
 		c.status = res.Status
+		if len(res.Nodename) != 0 {
+			c.nodename = res.Nodename
+		} else {
+			log.Warnf("Nodename not received")
+		}
 		log.Debugf("Got certificate")
 		break
 	default:
@@ -258,6 +258,17 @@ func (c *ApiClient) IsClaimed() bool {
 func (c *ApiClient) GetCertificate() (cert string, err error) {
 	if c.status == "claimed" {
 		cert = c.cert
+		return
+	} else {
+		err = errors.New("Device is not yet claimed")
+		return
+	}
+}
+
+// Return the certificate if the device is claimed
+func (c *ApiClient) GetNodename() (nodename string, err error) {
+	if c.status == "claimed" {
+		nodename = c.nodename
 		return
 	} else {
 		err = errors.New("Device is not yet claimed")
