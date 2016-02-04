@@ -23,10 +23,6 @@ import (
 	"redborder/rb-register-2/database"
 )
 
-const (
-	NODE_NAME = "/opt/rb/etc/chef/nodename"
-)
-
 var (
 	debug      *bool
 	url        *string // API url
@@ -64,6 +60,7 @@ func init() {
 	daemonFlag = flag.Bool("daemon", false, "Start in daemon mode")
 	pid = flag.String("pid", "pid", "File containing PID")
 	logFile = flag.String("log", "log", "Log file")
+	nodenameFile = flag.String("nodename", "", "File to store nodename")
 
 	flag.Parse()
 
@@ -198,9 +195,13 @@ func main() {
 	}
 
 	// Get nodename and save it to a file
-	if nodename, err := apiClient.GetNodename(); err != nil {
-		if err := ioutil.WriteFile(NODE_NAME, []byte(nodename), os.ModePerm); err != nil {
-			log.Errorf("Error saving nodename: %s", err.Error())
+	if nodename, err := apiClient.GetNodename(); err == nil {
+		if len(nodename) > 0 {
+			if err := ioutil.WriteFile(*nodenameFile, []byte(nodename), os.ModePerm); err != nil {
+				log.Errorf("Error saving nodename: %s", err.Error())
+			}
+		} else {
+			log.Warn("Cannot get nodename")
 		}
 	}
 
