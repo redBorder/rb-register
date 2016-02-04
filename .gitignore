@@ -1,4 +1,4 @@
-rb-register
+rb_register
 *.out
 *.coverprofile
 *.sublime-project
