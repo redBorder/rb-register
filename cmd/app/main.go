@@ -24,17 +24,18 @@ import (
 )
 
 var (
-	debug      *bool
-	url        *string // API url
-	hash       *string // Required hash to perform the registration
-	sleepTime  *int    // Time between requests
-	deviceType int     // Type of the requesting device
-	insecure   *bool   // If true, skip SSL verification
-	certFile   *string // Path to store de certificate
-	dbFile     *string // File to persist the state
-	daemonFlag *bool   // Start in daemon mode
-	pid        *string // Path to PID file
-	logFile    *string // Log file
+	debug        *bool
+	url          *string // API url
+	hash         *string // Required hash to perform the registration
+	sleepTime    *int    // Time between requests
+	deviceType   int     // Type of the requesting device
+	insecure     *bool   // If true, skip SSL verification
+	certFile     *string // Path to store de certificate
+	dbFile       *string // File to persist the state
+	daemonFlag   *bool   // Start in daemon mode
+	pid          *string // Path to PID file
+	logFile      *string // Log file
+	nodenameFile *string // File to store nodename
 
 	si  *sysinfo.SI
 	log *logrus.Logger
@@ -208,6 +209,8 @@ func main() {
 	// Launch chef client
 	sh.Echo("bash /opt/rb/bin/rb_register_finish.sh >> /var/log/rb-register/finish.log").Command("at", "now").Run()
 	log.Infof("Chef called")
+
+	log.Infof("Done")
 
 	ctrlc := make(chan os.Signal, 1)
 	signal.Notify(ctrlc, os.Interrupt)
