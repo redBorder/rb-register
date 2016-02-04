@@ -16,6 +16,7 @@ import (
 	"github.com/capnm/sysinfo"
 	"github.com/codeskyblue/go-sh"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/sevlyar/go-daemon"
 
 	"redborder/rb-register-2/client"
 	"redborder/rb-register-2/database"
@@ -34,6 +35,9 @@ var (
 	insecure   *bool   // If true, skip SSL verification
 	certFile   *string // Path to store de certificate
 	dbFile     *string // File to persist the state
+	daemonFlag *bool   // Start in daemon mode
+	pid        *string // Path to PID file
+	logFile    *string // Log file
 
 	si  *sysinfo.SI
 	log *logrus.Logger
@@ -49,14 +53,11 @@ func init() {
 	insecure = flag.Bool("no-check-certificate", false, "Dont check if the certificate is valid")
 	certFile = flag.String("cert", "/opt/rb/etc/chef/client.pem", "Certificate file")
 	dbFile = flag.String("db", "", "File to persist the state")
+	daemonFlag = flag.Bool("daemon", false, "Start in daemon mode")
+	pid = flag.String("pid", "pid", "File containing PID")
+	logFile = flag.String("log", "log", "Log file")
 
 	flag.Parse()
-
-	si = sysinfo.Get()
-}
-
-func main() {
-	var db *database.Database
 
 	// Create new logger
 	log = logrus.New()
@@ -69,6 +70,36 @@ func main() {
 		flag.Usage()
 		log.Fatal("You must provide a device type")
 	}
+
+	si = sysinfo.Get()
+}
+
+func main() {
+
+	// Daemonize the application
+	if *daemonFlag {
+		cntxt := &daemon.Context{
+			PidFileName: *pid,
+			PidFilePerm: 0644,
+			LogFileName: *logFile,
+			LogFilePerm: 0640,
+			WorkDir:     "./",
+			Umask:       027,
+			Args:        os.Args,
+		}
+
+		d, err := cntxt.Reborn()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		if d != nil {
+			log.Infof("Daemon started [PID: %d]", d.Pid)
+			return
+		}
+		defer cntxt.Release()
+	}
+
+	var db *database.Database
 
 	// Load database if neccesary
 	if dbFile != nil {
@@ -156,7 +187,7 @@ func main() {
 	}
 
 	// Launch chef client
-	sh.Echo("sh /opt/rb/bin/rb_register_finish.sh >> /var/log/rb-register/finish.log").Command("at", "now").Run()
+	sh.Echo("bash /opt/rb/bin/rb_register_finish.sh >> /var/log/rb-register/finish.log").Command("at", "now").Run()
 	log.Infof("Chef called")
 
 	ctrlc := make(chan os.Signal, 1)
