@@ -42,10 +42,10 @@ var (
 )
 
 var deviceAlias = map[string]int{
-	"AP":          20,
-	"PROXY":       31,
-	"IPS":         32,
-	"IPS_GENERIC": 33,
+	"ap":          20,
+	"proxy":       31,
+	"ips":         32,
+	"ips_generic": 33,
 }
 
 // init parses flags
