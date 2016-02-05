@@ -196,13 +196,15 @@ func main() {
 	}
 
 	// Get nodename and save it to a file
-	if nodename, err := apiClient.GetNodename(); err == nil {
-		if len(nodename) > 0 {
-			if err := ioutil.WriteFile(*nodenameFile, []byte(nodename), os.ModePerm); err != nil {
-				log.Errorf("Error saving nodename: %s", err.Error())
+	if len(*nodenameFile) > 0 {
+		if nodename, err := apiClient.GetNodename(); err == nil {
+			if len(nodename) > 0 {
+				if err := ioutil.WriteFile(*nodenameFile, []byte(nodename), os.ModePerm); err != nil {
+					log.Errorf("Error saving nodename: %s", err.Error())
+				}
+			} else {
+				log.Warn("Cannot get nodename")
 			}
-		} else {
-			log.Warn("Cannot get nodename")
 		}
 	}
 
