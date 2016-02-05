@@ -2,36 +2,36 @@
 
 ## Params
 
-```
-  --help                 Display this usage information.
-  
-  ACTIONS:
-  --register             Perform registration process.
-  
-  OPTIONS:
-  --url                  Protocol and hostname to connect.
-  --iface                Network if to get the MAC address.
-  --sleep                Time between requests in seconds.
-  --type                 ips | proxy | ap
-  --pid                  Path to PID file
-  --no-check-certificate Dont check if the certificate is valid
-  --daemonize            Start as daemon
-```
+Usage of **rb_register** and default values:
 
-- `DEFAULT HOST`: `https://register.app.redborder.net`
-- `DEFAULT IFACE`: `eth0`
-- `DEFAULT PID FILE`: `/tmp/rb_register.pid`
-- `DEFAULT CERTIFICATE PATH`: `/opt/rb/etc/chef/client.pem`
-- `DEFAULT_SLEEP_TIME`: `5`
+```
+-cert string
+      Certificate file (default "/opt/rb/etc/chef/client.pem")
+-daemon
+      Start in daemon mode
+-db string
+      File to persist the state
+-debug
+      Show debug info
+-hash string
+      Hash to use in the request (default "00000000-0000-0000-0000-000000000000")
+-log string
+      Log file (default "log")
+-no-check-certificate
+      Dont check if the certificate is valid
+-nodename string
+      File to store nodename
+-pid string
+      File containing PID (default "pid")
+-sleep int
+      Time between requests in seconds (default 300)
+-type string
+      Type of the registering device
+-url string
+      Protocol and hostname to connect (default "http://localhost")
+```
 
 ## Description
-
-There are three types of main sensors now:
-- Proxy
-- IPS
-- AP
-
-Sensors should be claimed by the client
 
 The status of the sensor can be:
 
@@ -41,7 +41,7 @@ The status of the sensor can be:
 
 ### Unregistered status
 
-The sensor will start at "Not registered" status so it will try to contact to `register.redborder.net` (managed by the same process than `cloud.redborder.net` now). The sensor will generate an http post message sending this data:
+The sensor will start at "Not registered" status so it will try to contact to given url (managed by the same process than `cloud.redborder.net` now). The sensor will generate an http post message sending this data:
 
 #### Register request
 
@@ -50,8 +50,8 @@ The sensor will start at "Not registered" status so it will try to contact to `r
     "order": "register",
     "cpu": /* Number of CPUs */,
     "memory": /* Memory avalable */,
-    "type": /* Type of sensor (2(IPS) | 10(PROXY) | AP) */,
-    "mac": /* MAC address */
+    "type": /* Type of sensor */,
+    "hash": /* HASH */
 }
 ```
 
@@ -62,12 +62,11 @@ If not registered, the cloud generates a **new** `UUID` and returns it in a mess
   ```javascript
   {
     "status": "registered",
-    "mac": /* MAC address */,
+    "mac": /* HASH */,
     "uuid": /* UUID */
   }
   ```
 
-_NOTE: The sensor can be previously registered but when the application starts, it always starts at "unregistered" status so it will send the register request. The server should know about this and send the **previous** `UUID` on the response instead of generate a new one everytime._
 
 ### Registered status
 
@@ -100,10 +99,11 @@ When the sensor sends a "verify" request expects a certificate, but if the senso
 ```javascript
 {
     "status": "claimed",
-    "cert": /* CERTIFICARTE */
+    "cert": /* CERTIFICARTE */,
+    "nodename": /* The name of the node */
 }
 ```
 
 ### Claimed status
 
-When a "claimed" status is received, the certificate is saved on the machine and the the app halts.
+When a "claimed" status is received, the certificate is saved on the machine and the the app halts util is stopped.
