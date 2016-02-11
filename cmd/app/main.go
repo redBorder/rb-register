@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"flag"
 	"io/ioutil"
+	"log/syslog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	logrus_syslog "github.com/Sirupsen/logrus/hooks/syslog"
 	"github.com/capnm/sysinfo"
 	"github.com/codeskyblue/go-sh"
 	_ "github.com/mattn/go-sqlite3"
@@ -69,6 +71,15 @@ func init() {
 	log = logrus.New()
 	if *debug {
 		log.Level = logrus.DebugLevel
+	}
+
+	if *daemonFlag {
+		hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "rb-register")
+		if err != nil {
+			log.Error("Unable to connect to local syslog daemon")
+		} else {
+			log.Hooks.Add(hook)
+		}
 	}
 
 	// Check device type arg
