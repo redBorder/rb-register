@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"io"
 	"log/syslog"
 	"os"
@@ -104,4 +105,8 @@ func endScript(script, logFileName string) error {
 	cmd.Wait()
 
 	return nil
+}
+
+func displayVersion() {
+	fmt.Println("RB_REGISTER VERSION:\t\t", version)
 }
