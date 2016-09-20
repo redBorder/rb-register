@@ -14,6 +14,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+var version string
+
 var (
 	debug         *bool       // Debug flag
 	url           *string     // API url
@@ -51,8 +53,14 @@ func init() {
 	pid = flag.String("pid", "pid", "File containing PID")
 	logFile = flag.String("log", "log", "Log file")
 	nodenameFile = flag.String("nodename", "", "File to store nodename")
+	versionFlag := flag.Bool("version", false, "Display version")
 
 	flag.Parse()
+
+	if *versionFlag {
+		displayVersion()
+		os.Exit(0)
+	}
 
 	// Init logger
 	if *debug {
