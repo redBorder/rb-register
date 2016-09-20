@@ -1,4 +1,5 @@
 rb_register
+vendor/
 *.out
 *.coverprofile
 *.sublime-project
