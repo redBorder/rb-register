@@ -33,32 +33,39 @@ type APIClient struct {
 func NewAPIClient(config APIClientConfig) *APIClient {
 	c := &APIClient{
 		config: config,
+		status: "registering",
 	}
 
 	if c.config.Logger == nil {
-		c.config.Logger = logrus.New()
+		c.config.Logger = logrus.NewEntry(logrus.New())
+		c.config.Logger.Logger.Out = ioutil.Discard
+	} else {
+		c.config.Logger = c.config.Logger.WithFields(logrus.Fields{
+			"component": "api_client",
+		})
 	}
+
 	logger := c.config.Logger
 
 	// Check if the configuration is ok
 	if len(c.config.URL) == 0 {
-		logger.Fatalf("Url not provided")
+		logger.Warnf("Url not provided")
 		return nil
 	}
 	if len(c.config.Hash) == 0 {
-		logger.Fatalf("Hash not provided")
+		logger.Warnf("Hash not provided")
 		return nil
 	}
 	if c.config.Cpus == 0 {
-		logger.Fatalf("CPU number not provided")
+		logger.Warnf("CPU number not provided")
 		return nil
 	}
 	if c.config.Memory == 0 {
-		logger.Fatalf("Memory not provided")
+		logger.Warnf("Memory not provided")
 		return nil
 	}
 	if c.config.DeviceType == 0 {
-		logger.Fatalf("Device type not provided")
+		logger.Warnf("Device type not provided")
 		return nil
 	}
 	if c.config.HTTPClient == nil {
