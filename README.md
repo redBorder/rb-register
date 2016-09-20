@@ -1,4 +1,12 @@
+[![Build Status](https://travis-ci.org/redBorder/rb-register-2.svg?branch=master)](https://travis-ci.org/redBorder/rb-register-2)
+[![Coverage Status](https://coveralls.io/repos/github/redBorder/rb-register-2/badge.svg)](https://coveralls.io/github/redBorder/rb-register-2)
+[![](https://goreportcard.com/badge/github.com/redBorder/rb-register-2)](https://goreportcard.com/report/github.com/redBorder/rb-register-2)
+[![](https://godoc.org/github.com/redBorder/rb-register-2?status.svg)](https://godoc.org/github.com/redBorder/rb-register-2)
+
 # rb_register
+
+Application written in GO that allow sensors to be registered by the redBorder
+Live Cloud.
 
 ## Params
 
@@ -6,85 +14,99 @@ Usage of **rb_register** and default values:
 
 ```
 -cert string
-      Certificate file (default "/opt/rb/etc/chef/client.pem")
+  	Certificate file (default "/opt/rb/etc/chef/client.pem")
 -daemon
-      Start in daemon mode
+  	Start in daemon mode
 -db string
-      File to persist the state
+  	File to persist the state
 -debug
-      Show debug info
+  	Show debug info
 -hash string
-      Hash to use in the request (default "00000000-0000-0000-0000-000000000000")
+  	Hash to use in the request (default "00000000-0000-0000-0000-000000000000")
 -log string
-      Log file (default "log")
+  	Log file (default "log")
 -no-check-certificate
-      Dont check if the certificate is valid
+  	Dont check if the certificate is valid
 -nodename string
-      File to store nodename
+  	File to store nodename
 -pid string
-      File containing PID (default "pid")
+  	File containing PID (default "pid")
+-script string
+  	Script to call after the certificate has been obtained (default "/opt/rb/bin/rb_register_finish.sh")
+-script-log string
+  	Log to save the result of the script called (default "/var/log/rb-register/finish.log")
 -sleep int
-      Time between requests in seconds (default 300)
+  	Time between requests in seconds (default 300)
 -type string
-      Type of the registering device
+  	Type of the registering device
 -url string
-      Protocol and hostname to connect (default "http://localhost")
+  	Protocol and hostname to connect (default "http://localhost")
+-version
+  	Display version
 ```
 
 ## Description
 
 The status of the sensor can be:
 
-- **Not registered**: The sensor doesn't appear at the cloud and it has never contacted with it. This is the initial status for this sensor.
+- **Not registered**: The sensor doesn't appear at the cloud and it has never
+contacted with it. This is the initial status for this sensor.
 - **Registered**: The sensor is registered at the cloud but nobody claimed it.
-- **Claimed**: The sensor registered and claimed by the client but need final step (download certificate)
+- **Claimed**: The sensor registered and claimed by the client but need final
+step (download certificate).
 
-### Unregistered status
+### Register process
 
-The sensor will start at "Not registered" status so it will try to contact to given url (managed by the same process than `cloud.redborder.net` now). The sensor will generate an http post message sending this data:
+The sensor will start at "Not registered" status so it will try to contact
+to given url (managed by the same process than `live.redborder.com` now). The
+sensor will generate an http post message sending this data:
 
 #### Register request
 
 ```javascript
 {
-    "order": "register",
-    "cpu": /* Number of CPUs */,
-    "memory": /* Memory avalable */,
-    "type": /* Type of sensor */,
-    "hash": /* HASH */
+    "order":  "register",
+    "cpu":    /* Number of CPUs   */,
+    "memory": /* Memory avalable  */,
+    "type":   /* Type of sensor   */,
+    "hash":   /* HASH             */
 }
 ```
 
 #### Register response
 
-If not registered, the cloud generates a **new** `UUID` and returns it in a message.
+If not registered, the cloud generates a **new** `UUID` and returns it in a
+message. If a database is provided then the application will persist the UUID
+so its not necessary to send the `register` request everytime the application
+starts.
 
   ```javascript
   {
     "status": "registered",
-    "mac": /* HASH */,
+    "mac":  /* HASH */,
     "uuid": /* UUID */
   }
   ```
 
+### Verification process
 
-### Registered status
-
-Afther the sensor receives the "registered" status, it will send "verify" request instead of "register" request. A verify request expects a certificate.
+Afther the sensor receives the "registered" status, it will send `verify`
+requests instead of `register` request. A verify request expects a `claimed`
+response along with a certificate and node name.
 
 #### Verify request
 
 ```javascript
 {
     "order": "verify",
-    "mac": /* MAC address */,
-    "uuid": /* UUID */
+    "mac":   /* MAC address */,
+    "uuid":  /* UUID        */
 }
 ```
 
 #### Verify response
 
-When the sensor sends a "verify" request expects a certificate, but if the sensor hasn't been claimed the certificate doesn't exists yet. 
+When the sensor sends a "verify" request expects a certificate, but if the sensor hasn't been claimed the certificate doesn't exists yet.
 
 1. If the sensor hasn't been claimed and there isn't a certificate, the response should be:
 
@@ -98,12 +120,13 @@ When the sensor sends a "verify" request expects a certificate, but if the senso
 
 ```javascript
 {
-    "status": "claimed",
-    "cert": /* CERTIFICARTE */,
+    "status":   "claimed",
+    "cert":     /* CERTIFICARTE         */,
     "nodename": /* The name of the node */
 }
 ```
 
-### Claimed status
+### Done status
 
-When a "claimed" status is received, the certificate is saved on the machine and the the app halts util is stopped.
+When a "claimed" status is received, the certificate and the node name are saved
+on disk and the application will execute a command before it halts.
