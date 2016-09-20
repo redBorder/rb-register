@@ -108,5 +108,6 @@ func endScript(script, logFileName string) error {
 }
 
 func displayVersion() {
-	fmt.Println("RB_REGISTER VERSION:\t\t", version)
+	fmt.Println("RB_REGISTER VERSION:\t", version)
+	fmt.Println("GO VERSION:\t\t", goVersion)
 }

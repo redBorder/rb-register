@@ -15,6 +15,7 @@ import (
 )
 
 var version string
+var goVersion = runtime.Version()
 
 var (
 	debug         *bool       // Debug flag
