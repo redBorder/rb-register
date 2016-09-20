@@ -19,7 +19,7 @@ var goVersion = runtime.Version()
 
 var (
 	debug         *bool       // Debug flag
-	url           *string     // API url
+	apiURL        *string     // API url
 	hash          *string     // Required hash to perform the registration
 	deviceAlias   *string     // Given alias of the device
 	sleepTime     *int        // Time between requests
@@ -43,7 +43,7 @@ func init() {
 	scriptFile = flag.String("script", "/opt/rb/bin/rb_register_finish.sh", "Script to call after the certificate has been obtained")
 	scriptLogFile = flag.String("script-log", "/var/log/rb-register/finish.log", "Log to save the result of the script called")
 	debug = flag.Bool("debug", false, "Show debug info")
-	url = flag.String("url", "http://localhost", "Protocol and hostname to connect")
+	apiURL = flag.String("url", "http://localhost", "Protocol and hostname to connect")
 	hash = flag.String("hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
 	sleepTime = flag.Int("sleep", 300, "Time between requests in seconds")
 	deviceAlias = flag.String("type", "", "Type of the registering device")
@@ -67,16 +67,14 @@ func init() {
 	if *debug {
 		logger.Level = logrus.DebugLevel
 	}
+}
 
+func main() {
 	// Check mandatory arguments
 	if len(*deviceAlias) == 0 {
 		flag.Usage()
 		logger.Fatal("You must provide a device alias")
 	}
-}
-
-func main() {
-	// Handle Ctrl+C
 
 	// Get the type of the device as an integer value
 	deviceType, err := getDeviceType(*deviceAlias)
@@ -99,7 +97,7 @@ func main() {
 	// Create a new API client for handle the connection with the API
 	apiClient := NewAPIClient(
 		APIClientConfig{
-			URL:        *url,
+			URL:        *apiURL,
 			Hash:       *hash,
 			Cpus:       runtime.NumCPU(),
 			Memory:     si.TotalRam,
