@@ -29,7 +29,7 @@ vet:
 
 test:
 	@printf "$(MKL_YELLOW)Running tests$(MKL_CLR_RESET)\n"
-	go test
+	go test -v
 	@printf "$(MKL_GREEN)Test passed$(MKL_CLR_RESET)\n"
 
 coverage:
