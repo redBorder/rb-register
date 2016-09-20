@@ -24,13 +24,18 @@ fmt:
 	@if [ -n "$$(go fmt)" ]; then echo 'Please run go fmt on your code.' && exit 1; fi
 
 vet:
-	@printf "$(MKL_YELLOW)Runing go vet$(MKL_CLR_RESET)\n"
+	@printf "$(MKL_YELLOW)Running go vet$(MKL_CLR_RESET)\n"
 	go vet
 
 test:
-	@printf "$(MKL_YELLOW)Runing tests$(MKL_CLR_RESET)\n"
-	go test -cover
+	@printf "$(MKL_YELLOW)Running tests$(MKL_CLR_RESET)\n"
+	go test
 	@printf "$(MKL_GREEN)Test passed$(MKL_CLR_RESET)\n"
+
+coverage:
+	@printf "$(MKL_YELLOW)Computing coverage$(MKL_CLR_RESET)\n"
+	@go test -covermode=count -coverprofile=coverage.out
+	@go tool cover -func coverage.out
 
 get_dev:
 	@printf "$(MKL_YELLOW)Installing deps$(MKL_CLR_RESET)\n"
@@ -40,5 +45,4 @@ get_dev:
 
 get:
 	@printf "$(MKL_YELLOW)Installing deps$(MKL_CLR_RESET)\n"
-	@go get github.com/Masterminds/glide
-	@glide install
+	glide install
