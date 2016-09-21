@@ -1,7 +1,6 @@
-[![Build Status](https://travis-ci.org/redBorder/rb-register-2.svg?branch=master)](https://travis-ci.org/redBorder/rb-register-2)
-[![Coverage Status](https://coveralls.io/repos/github/redBorder/rb-register-2/badge.svg)](https://coveralls.io/github/redBorder/rb-register-2)
-[![](https://goreportcard.com/badge/github.com/redBorder/rb-register-2)](https://goreportcard.com/report/github.com/redBorder/rb-register-2)
-[![](https://godoc.org/github.com/redBorder/rb-register-2?status.svg)](https://godoc.org/github.com/redBorder/rb-register-2)
+[![Build Status](https://travis-ci.org/redBorder/rb-register.svg?branch=master)](https://travis-ci.org/redBorder/rb-register)
+[![Coverage Status](https://coveralls.io/repos/github/redBorder/rb-register/badge.svg?branch=master)](https://coveralls.io/github/redBorder/rb-register?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/redBorder/rb-register)](https://goreportcard.com/report/github.com/redBorder/rb-register)
 
 # rb_register
 
