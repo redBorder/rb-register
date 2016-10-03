@@ -70,6 +70,7 @@ func init() {
 }
 
 func main() {
+	var db *Database
 	// Check mandatory arguments
 	if len(*deviceAlias) == 0 {
 		flag.Usage()
@@ -91,8 +92,10 @@ func main() {
 	}
 
 	// Initialize database
-	db := NewDatabase(DatabaseConfig{dbFile: *dbFile})
-	defer db.Close()
+	if len(*dbFile) > 0 {
+		db = NewDatabase(DatabaseConfig{dbFile: *dbFile})
+		defer db.Close()
+	}
 
 	// Create a new API client for handle the connection with the API
 	apiClient := NewAPIClient(
@@ -102,6 +105,7 @@ func main() {
 			Cpus:       runtime.NumCPU(),
 			Memory:     si.TotalRam,
 			DeviceType: deviceType,
+			Insecure:   *insecure,
 		},
 	)
 
