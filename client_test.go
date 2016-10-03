@@ -351,8 +351,7 @@ func Test_GetCertificate_Success(t *testing.T) {
 	apiClient.status = "claimed"
 	apiClient.cert = certificate
 
-	cert, err := apiClient.GetCertificate()
+	cert := apiClient.GetCertificate()
 
-	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, certificate, cert, "Wrong certificate")
 }
