@@ -213,6 +213,9 @@ func (c *APIClient) Verify() error {
 		return err
 	}
 	defer rawResponse.Body.Close()
+	if rawResponse.StatusCode >= 400 {
+		return errors.New("Got status code: " + rawResponse.Status)
+	}
 
 	// Read response to a buffer
 	bufferResponse, err := ioutil.ReadAll(rawResponse.Body)
@@ -241,7 +244,7 @@ func (c *APIClient) Verify() error {
 		return nil
 	}
 
-	return errors.New("Unknow response: " + res.Status)
+	return errors.New("Unknow status: " + res.Status)
 }
 
 // IsRegistered check if the client has been registered previously
@@ -255,23 +258,13 @@ func (c *APIClient) IsClaimed() bool {
 }
 
 // GetCertificate returns the certificate if the device is claimed
-func (c *APIClient) GetCertificate() (cert string, err error) {
-	cert = c.cert
-	if len(cert) <= 0 {
-		err = errors.New("No certificate available")
-	}
-
-	return
+func (c *APIClient) GetCertificate() string {
+	return c.cert
 }
 
 // GetNodename return the certificate if the device is claimed
-func (c *APIClient) GetNodename() (nodename string, err error) {
-	nodename = c.nodename
-	if len(nodename) <= 0 {
-		err = errors.New("No nodename available")
-	}
-
-	return
+func (c *APIClient) GetNodename() string {
+	return c.nodename
 }
 
 // GetUUID return the UUID if the device is registered

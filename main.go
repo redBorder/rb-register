@@ -105,33 +105,41 @@ func main() {
 		},
 	)
 
-	logger.Info("Start the registration process")
+	logger.Debug("Starting the registration process")
 	uuid := registrationProcess(apiClient, db)
 
-	logger.Infof("Using UUID: %s", uuid)
+	if len(uuid) == 0 {
+		logger.Fatal("No valid UUID received")
+	}
 
-	logger.Info("Start the verification process")
+	logger.Debug("Starting the verification process")
 	cert, nodename := verificationProcess(uuid, apiClient, db)
 
 	// Save the certificate to a file
 	if len(cert) > 0 && certFile != nil {
 		if err := ioutil.WriteFile(*certFile, []byte(cert), os.ModePerm); err != nil {
 			logger.Fatalf("Error saving certificate: %s", err.Error())
+		} else {
+			logger.Debugf("Certificate saved on %s", *certFile)
 		}
 	}
 
 	// Get nodename and save it to a file
-	if len(*nodenameFile) > 0 {
+	if len(nodename) > 0 && len(*nodenameFile) > 0 {
 		if err := ioutil.WriteFile(*nodenameFile, []byte(nodename), os.ModePerm); err != nil {
 			logger.Fatalf("Error saving nodename: %s", err.Error())
+		} else {
+			logger.Debugf("Nodename saved on %s", *nodenameFile)
 		}
 	}
 
 	// Call the finish script
+	logger.Debug("Calling end script")
 	if err := endScript(*scriptFile, *logFile); err != nil {
 		logger.Error(err)
 	}
-	logger.Infof("Chef called")
+
+	logger.Info("Done")
 
 	// Wait for SIGINT
 	ctrlc := make(chan os.Signal, 1)
@@ -152,10 +160,10 @@ func registrationProcess(apiClient *APIClient, db *Database) string {
 	if db != nil {
 		uuid, err = db.LoadUUID(*hash)
 
-		if err != nil || len(uuid) <= 0 {
-			logger.Warn("Can't load UUID from database")
-		} else {
-			logger.Debugf("Load UUID from DB: %s", uuid)
+		if err != nil {
+			logger.Fatalf("Can't load UUID from database: %s", err.Error())
+		} else if len(uuid) > 0 {
+			logger.Debugf("Loaded UUID from DB: %s", uuid)
 			return uuid
 		}
 	}
@@ -164,10 +172,10 @@ func registrationProcess(apiClient *APIClient, db *Database) string {
 	// response arrives
 	for {
 		if err = apiClient.Register(); err != nil {
-			logger.Warnf("Error registering device: %s", err)
-			break
+			logger.Errorf("Error registering device: %s", err)
 		}
 		if apiClient.IsRegistered() {
+			logger.Debugf("Registered")
 			break
 		}
 
@@ -175,15 +183,16 @@ func registrationProcess(apiClient *APIClient, db *Database) string {
 		time.Sleep(time.Duration(*sleepTime) * time.Second)
 	}
 
+	uuid, err = apiClient.GetUUID()
+	if err != nil {
+		logger.Fatalf("Error getting UUID: %s", err)
+	}
+
 	// Once an UUID has been obtained, if a database has been provided then
 	// persist the UUID
 	if db != nil {
-		uuid, err = apiClient.GetUUID()
-		if err != nil {
-			logger.Fatalf("Error getting UUID: %s", err)
-		}
-
 		db.StoreUUID(*hash, uuid)
+		logger.Debugf("UUID: %s saved to database", uuid)
 	}
 
 	return uuid
@@ -197,9 +206,8 @@ func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert,
 
 	for {
 		if err = apiClient.Verify(); err != nil {
-			logger.Warnf("Error verifying device: %s", err)
+			logger.Errorf("Error verifying device: %s", err)
 			break
-
 		}
 		if apiClient.IsClaimed() {
 			break
@@ -211,17 +219,13 @@ func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert,
 
 	// Get the certificate. It is necessary to convert '\n' to actual line breaks
 	// and remove the quotes
-	cert, err = apiClient.GetCertificate()
-	if err != nil {
-		logger.Fatalf("Error getting certificate: %s", err)
+	cert = apiClient.GetCertificate()
+	if len(cert) > 0 {
+		cert = strings.Replace(cert, "\\n", "\n", -1)
+		cert = strings.Replace(cert, `"`, ``, -1)
 	}
-	cert = strings.Replace(cert, "\\n", "\n", -1)
-	cert = strings.Replace(cert, `"`, ``, -1)
 
-	nodename, err = apiClient.GetNodename()
-	if err != nil {
-		logger.Fatalf("Error getting nodename: %s", err)
-	}
+	nodename = apiClient.GetNodename()
 
 	return
 }
