@@ -1,14 +1,16 @@
-package: github.com/redBorder/rb-register-2
+package: github.com/redBorder/rb-register
 import:
 - package: github.com/Sirupsen/logrus
   version: ^0.10.0
   subpackages:
   - hooks/syslog
+- package: github.com/capnm/sysinfo
 - package: github.com/mattn/go-sqlite3
   version: ^1.1.0
 - package: github.com/sevlyar/go-daemon
-- package: github.com/codeskyblue/go-sh
   version: ^0.1.0
-- package: github.com/codegangsta/inject
-  version: ^1.0.0-rc1
-- package: github.com/capnm/sysinfo
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.1.4
+  subpackages:
+  - assert
