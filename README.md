@@ -2,14 +2,41 @@
 [![Coverage Status](https://coveralls.io/repos/github/redBorder/rb-register/badge.svg?branch=master)](https://coveralls.io/github/redBorder/rb-register?branch=master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/redBorder/rb-register)](https://goreportcard.com/report/github.com/redBorder/rb-register)
 
-# rb_register
+# rb-register
 
 Application written in GO that allow sensors to be registered by the redBorder
 Live Cloud.
 
-## Params
+## Installing
 
-Usage of **rb_register** and default values:
+To install this application ensure you have the `GOPATH` environment variable
+set and **[glide](https://glide.sh/)** installed.
+
+```bash
+curl https://glide.sh/get | sh
+```
+
+And then:
+
+1. Clone this repo and cd to the project
+
+    ```bash
+    git clone https://github.com/redBorder/rb-register.git && cd rb-register
+    ```
+2. Install dependencies and compile
+
+    ```bash
+    make
+    ```
+3. Install on desired directory
+
+    ```bash
+    prefix=/opt/rb make install
+    ```
+
+## Usage
+
+Usage of **rb-register** and default values:
 
 ```
 -cert string
