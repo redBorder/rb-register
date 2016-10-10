@@ -4,48 +4,44 @@ MKL_YELLOW?=	\033[033m
 MKL_BLUE?=	\033[034m
 MKL_CLR_RESET?=	\033[0m
 
-BIN=      rb_register
+BIN=      rb-register
 prefix?=  /usr/local
 bindir?=	$(prefix)/bin
 
-build:
+build: get
 	@printf "$(MKL_YELLOW)Building $(BIN)$(MKL_CLR_RESET)\n"
-	go build -o $(BIN) ./cmd/app/
+	go build -ldflags "-X main.githash=`git rev-parse HEAD` -X main.version=`git describe --tags --always --dirty=-dev`" -o $(BIN)
 
-install:
+get: vendor
+
+install: build
 	@printf "$(MKL_YELLOW)Install $(BIN) to $(bindir)$(MKL_CLR_RESET)\n"
 	install $(BIN) $(bindir)
 
 uninstall:
 	@printf "$(MKL_RED)Uninstall $(BIN) from $(bindir)$(MKL_CLR_RESET)\n"
-	rm -f $(prefix)/$(BIN)
-
-check: fmt errcheck vet
-	@printf "$(MKL_GREEN)No errors found$(MKL_CLR_RESET)\n"
-
-fmt:
-	@if [ -n "$$(go fmt ./...)" ]; then echo 'Please run go fmt on your code.' && exit 1; fi
-
-errcheck:
-	@printf "$(MKL_YELLOW)Checking errors$(MKL_CLR_RESET)\n"
-	errcheck -ignoretests -verbose ./...
-
-vet:
-	@printf "$(MKL_YELLOW)Runing go vet$(MKL_CLR_RESET)\n"
-	go vet ./...
+	rm -f $(bindir)/$(BIN)
 
 test:
-	@printf "$(MKL_YELLOW)Runing tests$(MKL_CLR_RESET)\n"
-	go test -cover ./...
+	@printf "$(MKL_YELLOW)Running tests$(MKL_CLR_RESET)\n"
+	@go test -race  -v
 	@printf "$(MKL_GREEN)Test passed$(MKL_CLR_RESET)\n"
 
-get_dev:
-	@printf "$(MKL_YELLOW)Installing deps$(MKL_CLR_RESET)\n"
-	go get golang.org/x/tools/cmd/cover
-	go get golang.org/x/tools/cmd/vet
-	go get github.com/kisielk/errcheck
-	go get github.com/stretchr/testify/assert
+coverage:
+	@printf "$(MKL_YELLOW)Computing coverage$(MKL_CLR_RESET)\n"
+	@go test -covermode=count -coverprofile=batch.part
+	@echo "mode: count" > coverage.out
+	@grep -h -v "mode: count" *.part >> coverage.out
+	@go tool cover -func coverage.out
 
-get:
+GLIDE := $(shell command -v glide 2> /dev/null)
+vendor:
+ifndef GLIDE
+	$(error glide is not installed. Install it with "curl https://glide.sh/get | sh")
+endif
 	@printf "$(MKL_YELLOW)Installing deps$(MKL_CLR_RESET)\n"
-	go get -t ./...
+	@glide update
+
+clean:
+	rm -f $(BIN) $(SNORT_CONTROL)
+	rm -rf vendor/
