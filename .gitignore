@@ -1,5 +1,6 @@
-rb_register
+rb-register
 vendor/
+glide.lock
 *.out
 *.coverprofile
 *.sublime-project
