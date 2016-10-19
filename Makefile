@@ -4,7 +4,7 @@ MKL_YELLOW?=	\033[033m
 MKL_BLUE?=	\033[034m
 MKL_CLR_RESET?=	\033[0m
 
-BIN=      rb-register
+BIN=      rb_register
 prefix?=  /usr/local
 bindir?=	$(prefix)/bin
 
