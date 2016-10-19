@@ -1,4 +1,4 @@
-rb-register
+rb_register
 vendor/
 glide.lock
 *.out
