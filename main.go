@@ -57,7 +57,6 @@ var logger = logrus.New()
 // init parses flags
 func init() {
 	scriptFile = flag.String("script", "/opt/rb/bin/rb_register_finish.sh", "Script to call after the certificate has been obtained")
-	scriptLogFile = flag.String("script-log", "/var/log/rb-register/finish.log", "Log to save the result of the script called")
 	debug = flag.Bool("debug", false, "Show debug info")
 	apiURL = flag.String("url", "http://localhost", "Protocol and hostname to connect")
 	hash = flag.String("hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
