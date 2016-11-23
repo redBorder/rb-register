@@ -20,7 +20,6 @@ import (
 	"flag"
 	"io/ioutil"
 	"os"
-	"os/signal"
 	"runtime"
 	"strings"
 	"time"
@@ -57,7 +56,6 @@ var logger = logrus.New()
 // init parses flags
 func init() {
 	scriptFile = flag.String("script", "/opt/rb/bin/rb_register_finish.sh", "Script to call after the certificate has been obtained")
-	scriptLogFile = flag.String("script-log", "/var/log/rb-register/finish.log", "Log to save the result of the script called")
 	debug = flag.Bool("debug", false, "Show debug info")
 	apiURL = flag.String("url", "http://localhost", "Protocol and hostname to connect")
 	hash = flag.String("hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
@@ -87,29 +85,28 @@ func init() {
 
 func main() {
 	var db *Database
-	// Check mandatory arguments
 	if len(*deviceAlias) == 0 {
 		flag.Usage()
 		logger.Fatal("You must provide a device alias")
 	}
 
-	// Get the type of the device as an integer value
 	deviceType, err := getDeviceType(*deviceAlias)
 	if err != nil {
 		logger.Fatal("Invalid device alias")
 	}
 
-	// Obtain information of the system
 	si = sysinfo.Get()
 
-	// Daemonize the application
 	if *daemonFlag {
 		daemonize()
 	}
 
-	// Initialize database
 	if len(*dbFile) > 0 {
 		db = NewDatabase(DatabaseConfig{dbFile: *dbFile})
+		if db == nil {
+			logger.Errorln("Error opening database")
+			halt()
+		}
 		defer db.Close()
 	}
 
@@ -125,17 +122,20 @@ func main() {
 		},
 	)
 
-	logger.Debug("Starting the registration process")
-	uuid := registrationProcess(apiClient, db)
-
-	if len(uuid) == 0 {
-		logger.Fatal("No valid UUID received")
+	uuid, err := registrationProcess(apiClient, db)
+	if err != nil {
+		logger.Errorf("Registration failed: %v", err)
+		halt()
 	}
+	logger.Infoln("Registration completed")
 
-	logger.Debug("Starting the verification process")
-	cert, nodename := verificationProcess(uuid, apiClient, db)
+	cert, nodename, err := verificationProcess(uuid, apiClient, db)
+	if err != nil {
+		logger.Errorf("Verification failed: %v", err)
+		halt()
+	}
+	logger.Infoln("Verification completed")
 
-	// Save the certificate to a file
 	if len(cert) > 0 && certFile != nil {
 		if err := ioutil.WriteFile(*certFile, []byte(cert), os.ModePerm); err != nil {
 			logger.Fatalf("Error saving certificate: %s", err.Error())
@@ -144,7 +144,6 @@ func main() {
 		}
 	}
 
-	// Get nodename and save it to a file
 	if len(nodename) > 0 && len(*nodenameFile) > 0 {
 		if err := ioutil.WriteFile(*nodenameFile, []byte(nodename), os.ModePerm); err != nil {
 			logger.Fatalf("Error saving nodename: %s", err.Error())
@@ -153,49 +152,40 @@ func main() {
 		}
 	}
 
-	// Call the finish script
-	logger.Debug("Calling end script")
+	logger.Infoln("Calling finish script")
 	if err := endScript(*scriptFile, *logFile); err != nil {
 		logger.Error(err)
 	}
 
-	logger.Info("Done")
-
-	// Wait for SIGINT
-	ctrlc := make(chan os.Signal, 1)
-	signal.Notify(ctrlc, os.Interrupt)
-	<-ctrlc
+	logger.Info("Halted")
+	select {} // Wait forerver
 }
 
 // registrationProccess tries to register the device. I will send "register"
 // requests to the server and then wait for a "registered" response containing
 // an UUID. Once the UUID is obtained, if a database name is provided the
 // UUID will be persisted for future requests.
-func registrationProcess(apiClient *APIClient, db *Database) string {
-	var uuid string
-	var err error
-
-	// First check if already exists an UUID for the given HASH stored on DB so
-	// it is not necessary to send any "register" request
+func registrationProcess(apiClient *APIClient, db *Database) (uuid string, err error) {
 	if db != nil {
 		uuid, err = db.LoadUUID(*hash)
 
 		if err != nil {
-			logger.Fatalf("Can't load UUID from database: %s", err.Error())
-		} else if len(uuid) > 0 {
-			logger.Debugf("Loaded UUID from DB: %s", uuid)
-			return uuid
+			return // Error
 		}
+		if len(uuid) > 0 {
+			logger.Debugln("Loaded UUID from database")
+			return // Found UUID
+		}
+		logger.Debug(uuid)
 	}
 
-	// No UUID could be load from DB, send register messages until a "registered"
-	// response arrives
 	for {
-		if err = apiClient.Register(); err != nil {
-			logger.Errorf("Error registering device: %s", err)
+		logger.Debugln("Requesting new UUID")
+		uuid, err = apiClient.Register()
+		if err != nil {
+			return
 		}
 		if apiClient.IsRegistered() {
-			logger.Debugf("Registered")
 			break
 		}
 
@@ -203,31 +193,23 @@ func registrationProcess(apiClient *APIClient, db *Database) string {
 		time.Sleep(time.Duration(*sleepTime) * time.Second)
 	}
 
-	uuid, err = apiClient.GetUUID()
-	if err != nil {
-		logger.Fatalf("Error getting UUID: %s", err)
-	}
-
-	// Once an UUID has been obtained, if a database has been provided then
-	// persist the UUID
 	if db != nil {
 		db.StoreUUID(*hash, uuid)
-		logger.Debugf("UUID: %s saved to database", uuid)
+		logger.WithField("uuid", uuid).Debugf("UUID saved to database")
 	}
 
-	return uuid
+	return
 }
 
 // verificationProccess sends "verify" requests and waits for an "claimed"
 // response. The first "claimed" response should contain a certificate and
 // a node name that must be saved to disk.
-func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert, nodename string) {
-	var err error
-
+func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert, nodename string, err error) {
 	for {
-		if err = apiClient.Verify(); err != nil {
-			logger.Errorf("Error verifying device: %s", err)
-			break
+		logger.Debugln("Requesting verification")
+		err = apiClient.Verify(uuid)
+		if err != nil {
+			return
 		}
 		if apiClient.IsClaimed() {
 			break
@@ -237,7 +219,7 @@ func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert,
 		time.Sleep(time.Duration(*sleepTime) * time.Second)
 	}
 
-	// Get the certificate. It is necessary to convert '\n' to actual line breaks
+	// It is necessary to convert '\n' to actual line breaks
 	// and remove the quotes
 	cert = apiClient.GetCertificate()
 	if len(cert) > 0 {
@@ -248,4 +230,9 @@ func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert,
 	nodename = apiClient.GetNodename()
 
 	return
+}
+
+func halt() {
+	logger.Error("Halted")
+	select {}
 }
