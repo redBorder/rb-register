@@ -196,11 +196,11 @@ func Test_Register_Success(t *testing.T) {
 	apiClient.config.HTTPClient = client
 	defer server.Close()
 
-	err := apiClient.Register()
+	uuid, err := apiClient.Register()
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, "registered", apiClient.status, "Client should be registered")
-	assert.Equal(t, "00000000-0000-0000-0000-000000000000", apiClient.uuid, "Wrong UUID")
+	assert.Equal(t, "00000000-0000-0000-0000-000000000000", uuid, "Wrong UUID")
 }
 
 // Test register success
@@ -210,11 +210,11 @@ func Test_Register_Fail(t *testing.T) {
 	apiClient.config.HTTPClient = client
 	defer server.Close()
 
-	err := apiClient.Register()
+	uuid, err := apiClient.Register()
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, "registering", apiClient.status, "Client should be registering")
-	assert.Equal(t, "", apiClient.uuid, "Wrong UUID")
+	assert.Equal(t, "", uuid, "Wrong UUID")
 }
 
 // Test register fail
@@ -224,22 +224,22 @@ func Test_Register_Success_after_fail(t *testing.T) {
 	apiClient := NewAPIClient(validConfig)
 	apiClient.config.HTTPClient = client
 
-	err = apiClient.Register()
+	uuid, err := apiClient.Register()
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, "registering", apiClient.status, "Client should be registering")
-	assert.Equal(t, "", apiClient.uuid, "Wrong UUID")
+	assert.Equal(t, "", uuid, "Wrong UUID")
 
 	server.Close()
 	server, client = getTestHTTPClient(registeredHandlerFunc)
 	defer server.Close()
 	apiClient.config.HTTPClient = client
 
-	err = apiClient.Register()
+	uuid, err = apiClient.Register()
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, "registered", apiClient.status, "Client should be registered")
-	assert.Equal(t, "00000000-0000-0000-0000-000000000000", apiClient.uuid, "Wrong UUID")
+	assert.Equal(t, "00000000-0000-0000-0000-000000000000", uuid, "Wrong UUID")
 }
 
 // Test verify success when not yet claimed
@@ -250,14 +250,14 @@ func Test_Verify_Success_Not_Claimed(t *testing.T) {
 	apiClient := NewAPIClient(validConfig)
 	apiClient.config.HTTPClient = client
 
+	uuid := "00000000-0000-0000-0000-000000000000"
 	apiClient.status = "registered"
-	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
 
-	err = apiClient.Verify()
+	err = apiClient.Verify(uuid)
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, "registered", apiClient.status, "Client should be registered")
-	assert.Equal(t, "00000000-0000-0000-0000-000000000000", apiClient.uuid, "Wrong UUID")
+	assert.Equal(t, "00000000-0000-0000-0000-000000000000", uuid, "Wrong UUID")
 }
 
 // Test verify success when claimed
@@ -268,10 +268,10 @@ func Test_Verify_Success_Claimed(t *testing.T) {
 	apiClient := NewAPIClient(validConfig)
 	apiClient.config.HTTPClient = client
 
+	uuid := "00000000-0000-0000-0000-000000000000"
 	apiClient.status = "registered"
-	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
 
-	err = apiClient.Verify()
+	err = apiClient.Verify(uuid)
 
 	assert.NoError(t, err, "Unexpected error")
 	assert.Equal(t, "claimed", apiClient.status, "Client should be claimed")
@@ -286,10 +286,10 @@ func Test_Verify_Unknown_Response(t *testing.T) {
 	apiClient := NewAPIClient(validConfig)
 	apiClient.config.HTTPClient = client
 
+	uuid := "00000000-0000-0000-0000-000000000000"
 	apiClient.status = "registered"
-	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
 
-	err = apiClient.Verify()
+	err = apiClient.Verify(uuid)
 
 	assert.Error(t, err, "Expected error")
 	assert.Equal(t, "registered", apiClient.status, "Client should be claimed")
@@ -304,10 +304,10 @@ func Test_Verify_Invalid_JSON(t *testing.T) {
 	apiClient := NewAPIClient(validConfig)
 	apiClient.config.HTTPClient = client
 
+	uuid := "00000000-0000-0000-0000-000000000000"
 	apiClient.status = "registered"
-	apiClient.uuid = "00000000-0000-0000-0000-000000000000"
 
-	err = apiClient.Verify()
+	err = apiClient.Verify(uuid)
 
 	assert.Error(t, err, "Unexpected error")
 	assert.Equal(t, "registered", apiClient.status, "Client should be claimed")

@@ -38,7 +38,6 @@ const (
 // registration. It has the necessary methods to interact with the API.
 type APIClient struct {
 	status   string // Current status of the registrtation
-	uuid     string // The UUID that the application should obtain
 	cert     string // Client certificate
 	nodename string // Name of the node received along with the cert
 
@@ -99,11 +98,11 @@ func NewAPIClient(config APIClientConfig) *APIClient {
 
 // Register send a POST request with some fields to the remote API. It expects
 // a UUID from the API.
-func (c *APIClient) Register() error {
+func (c *APIClient) Register() (uuid string, err error) {
 	logger := c.config.Logger
 
 	if c.status == registeredResponse {
-		return errors.New("This device is already registered")
+		return "", errors.New("This device is already registered")
 	}
 
 	// request structure for register method
@@ -134,7 +133,7 @@ func (c *APIClient) Register() error {
 	// Generate a JSON message with the request
 	marshalledReq, err := json.Marshal(&req)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Send request
@@ -142,46 +141,45 @@ func (c *APIClient) Register() error {
 	bufferReq := bytes.NewBuffer(marshalledReq)
 	httpReq, err := http.NewRequest("POST", c.config.URL, bufferReq)
 	if err != nil {
-		return err
+		return "", err
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	rawResponse, err := c.config.HTTPClient.Do(httpReq)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer rawResponse.Body.Close()
 	if rawResponse.StatusCode >= 400 {
-		return errors.New("Got status code: " + rawResponse.Status)
+		return "", errors.New("Got status code: " + rawResponse.Status)
 	}
 
 	// Read response to a buffer
 	bufferResponse, err := ioutil.ReadAll(rawResponse.Body)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// Unmarshall the response
 	res := Response{}
 	err = json.Unmarshal(bufferResponse, &res)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	logger.Debugf("Register response: %v", res)
 
 	// Check response
 	if res.Status == registeredResponse {
-		c.uuid = res.UUID
 		c.status = res.Status
 	}
 
-	return nil
+	return res.UUID, nil
 }
 
 // Verify send the UUID along with the HASH to the API and expect to receive
 // a client certificate
-func (c *APIClient) Verify() error {
+func (c *APIClient) Verify(uuid string) error {
 	logger := c.config.Logger
 
 	if c.status == claimedResponse {
@@ -206,7 +204,7 @@ func (c *APIClient) Verify() error {
 	req := request{
 		Order: "verify",
 		Hash:  c.config.Hash,
-		UUID:  c.uuid,
+		UUID:  uuid,
 	}
 
 	// Generate a JSON message with the request
@@ -281,14 +279,4 @@ func (c *APIClient) GetCertificate() string {
 // GetNodename return the certificate if the device is claimed
 func (c *APIClient) GetNodename() string {
 	return c.nodename
-}
-
-// GetUUID return the UUID if the device is registered
-func (c *APIClient) GetUUID() (uuid string, err error) {
-	uuid = c.uuid
-	if len(uuid) <= 0 {
-		err = errors.New("No UUID available")
-	}
-
-	return
 }
