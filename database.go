@@ -25,7 +25,7 @@ import (
 
 const (
 	sqlCreateTable   = "CREATE TABLE IF NOT EXISTS Devices (Hash varchar(255) PRIMARY KEY, Uuid varchar(255))"
-	sqlInsertEntry   = "Insert into Devices (Hash, Uuid) values (?, ?)"
+	sqlInsertEntry   = "INSERT INTO Devices (Hash, Uuid) values (?, ?)"
 	sqlSelectDevices = "SELECT * FROM Devices"
 )
 

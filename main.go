@@ -110,6 +110,10 @@ func main() {
 	// Initialize database
 	if len(*dbFile) > 0 {
 		db = NewDatabase(DatabaseConfig{dbFile: *dbFile})
+		if db == nil {
+			logger.Errorln("Error opening database")
+			halt()
+		}
 		defer db.Close()
 	}
 
@@ -125,14 +129,12 @@ func main() {
 		},
 	)
 
-	logger.Debug("Starting the registration process")
 	uuid := registrationProcess(apiClient, db)
-
 	if len(uuid) == 0 {
-		logger.Fatal("No valid UUID received")
+		logger.Errorln("No valid UUID received")
+		halt()
 	}
 
-	logger.Debug("Starting the verification process")
 	cert, nodename := verificationProcess(uuid, apiClient, db)
 
 	// Save the certificate to a file
@@ -154,7 +156,7 @@ func main() {
 	}
 
 	// Call the finish script
-	logger.Debug("Calling end script")
+	logger.Infoln("Calling finish script")
 	if err := endScript(*scriptFile, *logFile); err != nil {
 		logger.Error(err)
 	}
@@ -181,21 +183,25 @@ func registrationProcess(apiClient *APIClient, db *Database) string {
 		uuid, err = db.LoadUUID(*hash)
 
 		if err != nil {
-			logger.Fatalf("Can't load UUID from database: %s", err.Error())
-		} else if len(uuid) > 0 {
-			logger.Debugf("Loaded UUID from DB: %s", uuid)
+			logger.Errorf("Error loading UUID from database: %s", err.Error())
+			halt()
+		}
+		if len(uuid) > 0 {
+			logger.WithField("uuid", uuid).Debugln("Using previous UUID from DB")
 			return uuid
 		}
+		logger.Debug(uuid)
 	}
 
 	// No UUID could be load from DB, send register messages until a "registered"
 	// response arrives
 	for {
-		if err = apiClient.Register(); err != nil {
+		logger.Debugln("Requesting new UUID")
+		if uuid, err = apiClient.Register(); err != nil {
 			logger.Errorf("Error registering device: %s", err)
+			halt()
 		}
 		if apiClient.IsRegistered() {
-			logger.Debugf("Registered")
 			break
 		}
 
@@ -203,16 +209,16 @@ func registrationProcess(apiClient *APIClient, db *Database) string {
 		time.Sleep(time.Duration(*sleepTime) * time.Second)
 	}
 
-	uuid, err = apiClient.GetUUID()
 	if err != nil {
-		logger.Fatalf("Error getting UUID: %s", err)
+		logger.Errorf("Error getting UUID: %s", err)
+		halt()
 	}
 
 	// Once an UUID has been obtained, if a database has been provided then
 	// persist the UUID
 	if db != nil {
 		db.StoreUUID(*hash, uuid)
-		logger.Debugf("UUID: %s saved to database", uuid)
+		logger.WithField("uuid", uuid).Debugf("UUID saved to database")
 	}
 
 	return uuid
@@ -225,9 +231,10 @@ func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert,
 	var err error
 
 	for {
-		if err = apiClient.Verify(); err != nil {
+		logger.Debugln("Requesting verification")
+		if err = apiClient.Verify(uuid); err != nil {
 			logger.Errorf("Error verifying device: %s", err)
-			break
+			halt()
 		}
 		if apiClient.IsClaimed() {
 			break
@@ -248,4 +255,9 @@ func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert,
 	nodename = apiClient.GetNodename()
 
 	return
+}
+
+func halt() {
+	logger.Error("Halted")
+	select {}
 }
