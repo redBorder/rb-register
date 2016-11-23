@@ -18,7 +18,7 @@ go:
 
 install:
   - go get github.com/mattn/goveralls
-  - curl https://glide.sh/get | sh
+  - go get github.com/Masterminds/glide
   - make get
 
 script:
