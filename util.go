@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
-	"io"
 	"log/syslog"
 	"os"
 	"os/exec"
@@ -47,8 +45,6 @@ func getDeviceType(alias string) (deviceType int, err error) {
 // daemonize let the app running on the background detached from the terminal
 // and will log to syslog
 func daemonize() {
-	logger := logrus.New()
-
 	hook, err := logrus_syslog.NewSyslogHook("", "", syslog.LOG_INFO, "rb-register")
 	if err != nil {
 		logrus.Error("Unable to connect to local syslog daemon")
@@ -88,21 +84,11 @@ func endScript(script, logFileName string) error {
 	}
 	defer logfile.Close()
 
-	stdoutPipe, err := cmd.StdoutPipe()
-	if err != nil {
-		return err
-	}
-
-	writer := bufio.NewWriter(logfile)
-	defer writer.Flush()
-
+	cmd.Stdout = logfile
 	err = cmd.Start()
 	if err != nil {
 		return err
 	}
-
-	go io.Copy(writer, stdoutPipe)
-	cmd.Wait()
 
 	return nil
 }
