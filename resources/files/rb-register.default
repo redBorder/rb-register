@@ -1,0 +1,4 @@
+RBDOMAIN="rblive.redborder.com"
+URL="https://${RBDOMAIN}/api/v1/sensors"
+TYPE="proxy"
+OPTIONS=""

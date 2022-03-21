@@ -53,9 +53,12 @@ fi
 [ -f /etc/chef/client.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://$RBDOMAIN\"|" /etc/chef/client.rb.default
 [ -f /etc/chef/client.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://$RBDOMAIN\"|" /etc/chef/client.rb
 [ -f /etc/sysconfig/rb-register.default ] && sed -i "s|^RBDOMAIN=.*|RBDOMAIN=\"$RBDOMAIN\"|" /etc/sysconfig/rb-register.default
+[ -f /etc/sysconfig/rb-register.default ] && sed -i "s|^URL=.*|URL=\"https://$RBDOMAIN/api/v1/sensors\"|" /etc/sysconfig/rb-register.default
 [ -f /etc/sysconfig/rb-register ] && sed -i "s|^RBDOMAIN=.*|RBDOMAIN=\"$RBDOMAIN\"|" /etc/sysconfig/rb-register
+[ -f /etc/sysconfig/rb-register ] && sed -i "s|^URL=.*|URL=\"https://$RBDOMAIN/api/v1/sensors\"|" /etc/sysconfig/rb-register
 [ -f /etc/issue ] && sed -i "s|^.*Claim this sensor at.*|NOTE: Claim this sensor at https://$RBDOMAIN with this UUID|" /etc/issue
 
+ 
 if [ $INSECURE -eq 0 ]; then
   #we must remove ssl_verify_mode entry
   [ -f /etc/chef/client.rb.default ] && sed -i '/^ssl_verify_mode/d' /etc/chef/client.rb.default
