@@ -1,0 +1,13 @@
+[Unit]
+Description=register sensors to a Manager
+
+[Service]
+User=root
+EnvironmentFile=/etc/sysconfig/rb-register
+ExecStartPre=/bin/bash -c "if [ ! -f /etc/rb-uuid]; then cat /proc/sys/kernel/random/uuid > /opt/rb/etc/rb-uuid; exit 1; fi"
+Environment="HASH=\"$(cat /etc/rb-uuid)\""
+ExecStart=/usr/bin/rb_register -url "$URL" -sleep $SLEEP -type proxy -hash $HASH -cert /etc/chef/client.pem -db /opt/rb/etc/rb-register.db -nodename /etc/chef/nodename -log finish.log $OPTIONS
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
