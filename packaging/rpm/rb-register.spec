@@ -54,9 +54,9 @@ rm -rf %{buildroot}
 %pre
 
 %post
-/usr/lib/redborder/bin/rb_rubywrapper.sh -c
 [ ! -f /etc/sysconfig/rb-register ] && cp /etc/sysconfig/rb-register.default /etc/sysconfig/rb-register
 systemctl daemon-reload
+/usr/lib/redborder/bin/rb_rubywrapper.sh -c
 
 %files
 %defattr(0755,root,root)
