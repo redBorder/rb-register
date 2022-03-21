@@ -8,7 +8,7 @@ import:
 - package: github.com/mattn/go-sqlite3
   version: ^1.1.0
 - package: github.com/sevlyar/go-daemon
-  version: ^0.1.0
+  version: 3bf5e993af87194518e81cf9a81c1c53190a8911
 testImport:
 - package: github.com/stretchr/testify
   version: ^1.1.4
