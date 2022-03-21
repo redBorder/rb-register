@@ -25,8 +25,7 @@ export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 
 mkdir -p $GOPATH/src/github.com/redBorder/rb-register
-cd src/rb-register
-rsync -az --exclude=gopath/ ./ $GOPATH/src/github.com/redBorder/rb-register
+rsync -az --exclude=packaging/ --exclude=resources/ --exclude=gopath/ ./ $GOPATH/src/github.com/redBorder/rb-register
 cd $GOPATH/src/github.com/redBorder/rb-register
 make
 
@@ -42,10 +41,9 @@ export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 pushd $GOPATH/src/github.com/redBorder/rb-register
 prefix=%{buildroot}/usr make install
-
 popd
 cp resources/bin/* %{buildroot}/usr/lib/redborder/bin
-
+install -D -m 0644 resources/systemd/rb-register.service %{buildroot}/usr/lib/systemd/system/rb-register.service
 install -D -m 0644 resources/systemd/rb-register.service %{buildroot}/usr/lib/systemd/system/rb-register.service
 
 %clean
