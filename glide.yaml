@@ -1,16 +1,17 @@
 package: github.com/redBorder/rb-register
 import:
 - package: github.com/Sirupsen/logrus
-  version: ^0.10.0
+  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
   subpackages:
   - hooks/syslog
 - package: github.com/capnm/sysinfo
+  version: 5909a53897f32d198d9c81e3417f6d25ecfd2229
 - package: github.com/mattn/go-sqlite3
-  version: ^1.1.0
+  version: 3b3f1d01b2696af5501697c35629048c227586ab
 - package: github.com/sevlyar/go-daemon
   version: 3bf5e993af87194518e81cf9a81c1c53190a8911
 testImport:
 - package: github.com/stretchr/testify
-  version: ^1.1.4
+  version: 69483b4bd14f5845b5a1e55bca19e954e827f1d0
   subpackages:
   - assert
