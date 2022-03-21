@@ -96,21 +96,21 @@ sed -i '/rbookshelf.s3.redborder.cluster/d' /etc/hosts
 
 if [ $START -eq 1 ]; then
   if [ -f /etc/chef/client.pem ]; then
-    /etc/init.d/chef-client status &>/dev/null
+    systemctl status chef-client &>/dev/null
     if [ $? -eq 0 ]; then
-      service chef-client restart
+      systemctl restart chef-client
     else
-      service chef-client restart
+      systemctl restart chef-client
     fi
   else
-    /etc/init.d/rb-register status &>/dev/null
+    systemctl restart rb-register &>/dev/null
     if [ $? -eq 0 ]; then
-      service rb-register stop
+      systemctl stop rb-register
       rm -f /etc/rb-register.db
-      service rb-register start
+      systemctl start rb-register
     else
       rm -f /etc/rb-register.db
-      service rb-register start
+      systemctl start rb-register
     fi
   fi
 fi
