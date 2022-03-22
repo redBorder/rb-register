@@ -51,7 +51,7 @@ if [ "x$RBDOMAIN" == "x" ]; then
 fi
 
 [ -f /etc/chef/client.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://$RBDOMAIN\"|" /etc/chef/client.rb.default
-[ -f /etc/chef/client.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://$RBDOMAIN\"|" /etc/chef/client.rb
+[ -f /etc/chef/client.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service/organizations/redborder\"|" /etc/chef/client.rb
 [ -f /etc/sysconfig/rb-register.default ] && sed -i "s|^RBDOMAIN=.*|RBDOMAIN=\"$RBDOMAIN\"|" /etc/sysconfig/rb-register.default
 [ -f /etc/sysconfig/rb-register.default ] && sed -i "s|^URL=.*|URL=\"https://$RBDOMAIN/api/v1/sensors\"|" /etc/sysconfig/rb-register.default
 [ -f /etc/sysconfig/rb-register ] && sed -i "s|^RBDOMAIN=.*|RBDOMAIN=\"$RBDOMAIN\"|" /etc/sysconfig/rb-register
@@ -91,7 +91,7 @@ fi
 
 sed -i '/data.redborder.cluster/d' /etc/hosts
 sed -i '/rbookshelf.s3.redborder.cluster/d' /etc/hosts
-[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster" >> /etc/hosts
+[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service" >> /etc/hosts
 #fi
 
 if [ $START -eq 1 ]; then
