@@ -65,11 +65,10 @@ systemctl daemon-reload
 %defattr(644,root,root)
 /usr/lib/systemd/system/rb-register.service
 /etc/sysconfig/rb-register.default
-/etc/chef/
+/etc/chef
 %defattr(755,root,root)
 /usr/lib/redborder/bin/rb_register_url.sh
 /usr/lib/redborder/bin/rb_register_finish.sh
-/etc/chef
 %doc
 
 %changelog
