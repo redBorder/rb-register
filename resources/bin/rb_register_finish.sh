@@ -31,14 +31,35 @@ function title(){
 if [ -f /etc/chef/role-once.json.default ]; then
   title "  started rb_register_finish.sh ($(date))"
 
-  touch /etc/force_create_topics
+  #touch /etc/force_create_topics
 
   rm -f /etc/chef/role.json /etc/chef/role-once.json /etc/rb-id
   cp /etc/chef/role-once.json.default /etc/chef/role-once.json
   
+  if [ -f /etc/chef/client.rb.default ]; then
+    cp /etc/chef/client.rb.default /etc/chef/client.rb
+  else
+    echo "This node has not chef well configure!! (/etc/chef/client.rb.default)"
+    exit 1 
+  fi
+
+  if [ -f /etc/chef/nodename ]; then
+    NODENAME=$(cat /etc/chef/nodename)
+    [ -f /etc/chef/client.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /etc/chef/client.rb
+  else
+    echo "This node has not valid nodename yet!! (/etc/chef/nodename)"
+    exit 1 
+  fi
+  
   while [ "x$sensor_id" == "x0" -a $counter -le $max -a ! -f /etc/chef/role.json ]; do
     title "       chef-client run (${counter})"
-    chef-client
+    
+    #########################
+    # rb_run_chef_once.sh   #
+    #########################
+    #chef-client -c /etc/chef/client.rb --once -s 5 --node-name $(head -n 1 /etc/chef/nodename) -j /etc/chef/role-once.json
+    chef-client -c /etc/chef/client.rb --once -s 5 -j /etc/chef/role-once.json
+
     sensor_id=$(head -n 1 /etc/rb-id 2>/dev/null)
     counter=$(($counter +1))
     [ "x$sensor_id" == "x" ] && sensor_id=0
@@ -48,17 +69,17 @@ if [ -f /etc/chef/role-once.json.default ]; then
   [ -f /etc/chef/role.json -a "x$sensor_id" != "x" ] && ret=0
   [ ! -f /etc/chef/role.json ] && cp /etc/chef/role.json.default /etc/chef/role.json
 
-  service zookeeper status &>/dev/null
-  [ $? -eq 0 ] && timeout 300 /opt/rb/bin/rb_create_topics.sh | grep -v 'Due to limitations in metric names' | grep -v "already exists" | grep -v "kafka.admin"
+  #service zookeeper status &>/dev/null
+  #[ $? -eq 0 ] && timeout 300 /opt/rb/bin/rb_create_topics.sh | grep -v 'Due to limitations in metric names' | grep -v "already exists" | grep -v "kafka.admin"
 
-  rm -f /etc/force_create_topics
+  #rm -f /etc/force_create_topics
 
   if [ -f /etc/chef/client.pem ]; then
-    chkconfig chef-client on
-    chkconfig rb-register off
-    service chef-client start 
+    systemctl enable chef-client
+    systemctl disable rb-register 
+    systemctl start chef-client
     sleep 5
-    rb_wakeup_chef
+    rb_wakeup_chef.sh
   fi
  
   title "  finished rb_register_finish.sh ($(date))"
