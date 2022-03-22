@@ -5,3 +5,5 @@ glide.lock
 *.coverprofile
 *.sublime-project
 *.sublime-workspace
+pkgs
+SOURCES
