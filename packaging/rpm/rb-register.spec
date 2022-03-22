@@ -45,7 +45,7 @@ prefix=%{buildroot}/usr make install
 popd
 cp resources/bin/* %{buildroot}/usr/lib/redborder/bin
 cp -f resources/files/rb-register.default %{buildroot}/etc/sysconfig/
-cp -r resources/chef/ %{buildroot}/etc/chef/
+cp -r resources/chef/ %{buildroot}/etc/
 install -D -m 0644 resources/systemd/rb-register.service %{buildroot}/usr/lib/systemd/system/rb-register.service
 
 
