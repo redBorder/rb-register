@@ -66,6 +66,7 @@ systemctl daemon-reload
 /etc/sysconfig/rb-register.default
 %defattr(755,root,root)
 /usr/lib/redborder/bin/rb_register_url.sh
+/usr/lib/redborder/bin/rb_register_finish.sh
 
 %doc
 
