@@ -69,6 +69,7 @@ systemctl daemon-reload
 %defattr(755,root,root)
 /usr/lib/redborder/bin/rb_register_url.sh
 /usr/lib/redborder/bin/rb_register_finish.sh
+/etc/chef
 %doc
 
 %changelog
