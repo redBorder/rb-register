@@ -33,23 +33,33 @@ if [ -f /etc/chef/role-once.json.default ]; then
 
   #touch /etc/force_create_topics
 
-  rm -f /etc/chef/role.json /etc/chef/role-once.json /etc/rb-id
+  rm -f /etc/chef/role.json /etc/chef/role-once.json /etc/rb-id /etc/chef/client.rb /etc/chef/knife.rb
+
   cp /etc/chef/role-once.json.default /etc/chef/role-once.json
   
   if [ -f /etc/chef/client.rb.default ]; then
-    cp /etc/chef/client.rb.default /etc/chef/client.rb
+    cp  /etc/chef/client.rb.default /etc/chef/client.rb
   else
     echo "This node has not chef well configure!! (/etc/chef/client.rb.default)"
+    exit 1 
+  fi
+
+  if [ -f /etc/chef/knife.rb.default ]; then
+    cp  /etc/chef/knife.rb.default /etc/chef/knife.rb
+  else
+    echo "This node has not chef well configure!! (/etc/chef/knife.rb.default)"
     exit 1 
   fi
 
   if [ -f /etc/chef/nodename ]; then
     NODENAME=$(cat /etc/chef/nodename)
     [ -f /etc/chef/client.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /etc/chef/client.rb
+    [ -f /etc/chef/knife.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /etc/chef/knife.rb
   else
     echo "This node has not valid nodename yet!! (/etc/chef/nodename)"
     exit 1 
   fi
+
   
   while [ "x$sensor_id" == "x0" -a $counter -le $max -a ! -f /etc/chef/role.json ]; do
     title "       chef-client run (${counter})"
