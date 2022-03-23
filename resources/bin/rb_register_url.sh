@@ -50,7 +50,7 @@ if [ "x$RBDOMAIN" == "x" ]; then
   [ "x$RBDOMAIN" == "x" ] && RBDOMAIN="rblive.redborder.com"
 fi
 
-[ -f /etc/chef/client.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://$RBDOMAIN\"|" /etc/chef/client.rb.default
+[ -f /etc/chef/client.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service/organizations/redborder\"|" /etc/chef/client.rb.default
 [ -f /etc/chef/client.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service/organizations/redborder\"|" /etc/chef/client.rb
 [ -f /etc/sysconfig/rb-register.default ] && sed -i "s|^RBDOMAIN=.*|RBDOMAIN=\"$RBDOMAIN\"|" /etc/sysconfig/rb-register.default
 [ -f /etc/sysconfig/rb-register.default ] && sed -i "s|^URL=.*|URL=\"https://$RBDOMAIN/api/v1/sensors\"|" /etc/sysconfig/rb-register.default
