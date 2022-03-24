@@ -33,19 +33,20 @@ if [ -f /etc/chef/role-once.json.default ]; then
 
   #touch /etc/force_create_topics
 
-  rm -f /etc/chef/role.json /etc/chef/role-once.json /etc/rb-id /etc/chef/client.rb /etc/chef/knife.rb
+  rm -f /etc/chef/role.json /etc/chef/role-once.json /etc/rb-id /etc/chef/client.rb /root/.chef/knife.rb
 
   cp /etc/chef/role-once.json.default /etc/chef/role-once.json
   
   if [ -f /etc/chef/client.rb.default ]; then
-    cp  /etc/chef/client.rb.default /etc/chef/client.rb
+    cp -f /etc/chef/client.rb.default /etc/chef/client.rb
   else
     echo "This node has not chef well configure!! (/etc/chef/client.rb.default)"
     exit 1 
   fi
 
   if [ -f /etc/chef/knife.rb.default ]; then
-    cp  /etc/chef/knife.rb.default /etc/chef/knife.rb
+    mkdir -p /root/.chef
+    cp -f /etc/chef/knife.rb.default /root/.chef/knife.rb
   else
     echo "This node has not chef well configure!! (/etc/chef/knife.rb.default)"
     exit 1 
@@ -54,7 +55,7 @@ if [ -f /etc/chef/role-once.json.default ]; then
   if [ -f /etc/chef/nodename ]; then
     NODENAME=$(cat /etc/chef/nodename)
     [ -f /etc/chef/client.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /etc/chef/client.rb
-    [ -f /etc/chef/knife.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /etc/chef/knife.rb
+    [ -f /root/.chef/knife.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /root/.chef/knife.rb
   else
     echo "This node has not valid nodename yet!! (/etc/chef/nodename)"
     exit 1 
