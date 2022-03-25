@@ -56,6 +56,7 @@ if [ -f /etc/chef/role-once.json.default ]; then
     NODENAME=$(cat /etc/chef/nodename)
     [ -f /etc/chef/client.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /etc/chef/client.rb
     [ -f /root/.chef/knife.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /root/.chef/knife.rb
+    [ -f /etc/hosts ] && sed -i "s|localhost.node|$NODENAME.node localhost.node|" /root/.chef/knife.rb
   else
     echo "This node has not valid nodename yet!! (/etc/chef/nodename)"
     exit 1 
