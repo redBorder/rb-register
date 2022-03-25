@@ -56,6 +56,7 @@ if [ -f /etc/chef/role-once.json.default ]; then
     NODENAME=$(cat /etc/chef/nodename)
     [ -f /etc/chef/client.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /etc/chef/client.rb
     [ -f /root/.chef/knife.rb ] && sed -i "s|HOSTNAME|$NODENAME|" /root/.chef/knife.rb
+    [ -f /etc/hosts ] && sed -i "s|kafka.service|$NODENAME.node kafka.service|" /etc/hosts
   else
     echo "This node has not valid nodename yet!! (/etc/chef/nodename)"
     exit 1 
