@@ -62,7 +62,9 @@ if [ -f /etc/chef/role-once.json.default ]; then
     exit 1 
   fi
 
-  
+  # Set hostname
+  hostnamectl set-hostname $NODENAME
+
   while [ "x$sensor_id" == "x0" -a $counter -le $max -a ! -f /etc/chef/role.json ]; do
     title "       chef-client run (${counter})"
     
