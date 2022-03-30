@@ -71,7 +71,7 @@ mkdir -p /var/log/rb-register
 %doc
 
 %changelog
-* Wed Mar 30 2022 Miguel Negron <manegron@redborder.com> - 1.1.20
+* Wed Mar 30 2022 Miguel Negron <manegron@redborder.com> - 1.1.10
 - Make rb-register generic
 * Fri Nov 26 2021 Javier Rodriguez Gomez <javiercrg@redborder.com> - 0.0.1
 - First spec version
