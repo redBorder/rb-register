@@ -52,7 +52,6 @@ rm -rf %{buildroot}
 %pre
 
 %post
-[ ! -f /etc/sysconfig/rb-register ] && cp /etc/sysconfig/rb-register.default /etc/sysconfig/rb-register
 systemctl daemon-reload
 /usr/lib/redborder/bin/rb_rubywrapper.sh -c
 mkdir -p /var/log/rb-register

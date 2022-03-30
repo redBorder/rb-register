@@ -59,6 +59,8 @@ OPTIONS=""
 EOF
 fi
 
+[ ! -f /etc/sysconfig/rb-register ] && cp /etc/sysconfig/rb-register.default /etc/sysconfig/rb-register
+
 if [ "x$RBDOMAIN" == "x" ]; then
   source /etc/sysconfig/rb-register.default
   [ "x$RBDOMAIN" == "x" ] && RBDOMAIN="rblive.redborder.com"
