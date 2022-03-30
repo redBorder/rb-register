@@ -97,7 +97,7 @@ if [ -f /etc/chef/role-once.json.default ]; then
   fi
  
   title "  finished rb_register_finish.sh ($(date))"
-  date > /etc/redborder/proxy-installed.txt
+  date > /etc/redborder/sensor-installed.txt
 else
   echo "ERROR: /etc/chef/role-once.json.default not found"
 fi
