@@ -43,7 +43,6 @@ pushd $GOPATH/src/github.com/redBorder/rb-register
 prefix=%{buildroot}/usr make install
 popd
 cp resources/bin/* %{buildroot}/usr/lib/redborder/bin
-cp -f resources/files/rb-register.default %{buildroot}/etc/sysconfig/
 install -D -m 0644 resources/systemd/rb-register.service %{buildroot}/usr/lib/systemd/system/rb-register.service
 
 
@@ -63,7 +62,6 @@ mkdir -p /var/log/rb-register
 /usr/bin/rb_register
 %defattr(644,root,root)
 /usr/lib/systemd/system/rb-register.service
-/etc/sysconfig/rb-register.default
 %defattr(755,root,root)
 /usr/lib/redborder/bin/rb_register_url.sh
 /usr/lib/redborder/bin/rb_register_finish.sh

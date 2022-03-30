@@ -21,7 +21,7 @@ DNS=0
 START=1
 DNSF=0
 
-source /usr/lib/redborder/lib/rb_proxy_functions.sh
+source /usr/lib/redborder/lib/rb_functions.sh
 
 function usage(){
 	echo "ERROR: $0 [-u <url>] [-i] [-h] [-d]"
@@ -34,7 +34,10 @@ function usage(){
 	exit 2
 }
 
-while getopts "hu:idsf" opt; do
+# Default values
+TYPE="PROXY"
+
+while getopts "hu:idsft:" opt; do
   case $opt in
     i) INSECURE=1;;
     u) RBDOMAIN=$OPTARG;;
@@ -42,8 +45,19 @@ while getopts "hu:idsf" opt; do
     d) DNS=1;;
     f) DNSF=1;;
     s) START=0;;
+    t) TYPE=$OPTARG;;
   esac
 done
+
+if [ ! -f /etc/sysconfig/rb-register.default ]; then
+cat >/etc/sysconfig/rb-register.default <<EOF
+RBDOMAIN="rblive.redborder.com"
+URL="https://\${RBDOMAIN}/api/v1/sensors"
+TYPE="$TYPE"
+SCRIPT="/usr/lib/redborder/bin/rb_register_finish.sh"
+OPTIONS=""
+EOF
+fi
 
 if [ "x$RBDOMAIN" == "x" ]; then
   source /etc/sysconfig/rb-register.default

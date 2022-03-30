@@ -1,5 +1,0 @@
-RBDOMAIN="rblive.redborder.com"
-URL="https://${RBDOMAIN}/api/v1/sensors"
-TYPE="proxy"
-SCRIPT="/usr/lib/redborder/bin/rb_register_finish.sh"
-OPTIONS=""
