@@ -53,8 +53,9 @@ rm -rf %{buildroot}
 
 %post
 systemctl daemon-reload
-/usr/lib/redborder/bin/rb_rubywrapper.sh -c
 mkdir -p /var/log/rb-register
+[ -f /usr/lib/redborder/bin/rb_rubywrapper.sh ] && /usr/lib/redborder/bin/rb_rubywrapper.sh -c
+
 
 %files
 %defattr(0755,root,root)
