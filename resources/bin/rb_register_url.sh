@@ -35,7 +35,7 @@ function usage(){
 }
 
 # Default values
-TYPE="PROXY"
+TYPE="proxy"
 
 while getopts "hu:idsft:" opt; do
   case $opt in
