@@ -116,7 +116,7 @@ starts.
 
 ### Verification process
 
-Afther the sensor receives the "registered" status, it will send `verify`
+After the sensor receives the "registered" status, it will send `verify`
 requests instead of `register` request. A verify request expects a `claimed`
 response along with a certificate and node name.
 
