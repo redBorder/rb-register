@@ -28,7 +28,7 @@ function usage(){
   	echo "    -u <url>: url to connect to"
   	echo "    -i: do not validate server cert (insecure)"
   	echo "    -d: add dns entries to /etc/hosts in case it is not resolvable and the url is an ip"
-        echo "    -f: add the dns entry even if it is a domain (it will try to resolv the ip address)"
+    echo "    -f: add the dns entry even if it is a domain (it will try to resolv the ip address)"
   	echo "    -s: do no start services"
   	echo "    -h -> print this help"
 	exit 2
