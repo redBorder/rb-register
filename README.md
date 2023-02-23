@@ -93,7 +93,7 @@ sensor will generate an http post message sending this data:
 {
     "order":  "register",
     "cpu":    /* Number of CPUs   */,
-    "memory": /* Memory avalable  */,
+    "memory": /* Memory available */,
     "type":   /* Type of sensor   */,
     "hash":   /* HASH             */
 }
@@ -147,7 +147,7 @@ When the sensor sends a "verify" request expects a certificate, but if the senso
 ```javascript
 {
     "status":   "claimed",
-    "cert":     /* CERTIFICARTE         */,
+    "cert":     /* CERTIFICATE          */,
     "nodename": /* The name of the node */
 }
 ```
