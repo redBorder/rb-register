@@ -168,8 +168,10 @@ func main() {
 func registrationProcess(apiClient *APIClient, db *Database) (uuid string, err error) {
 	if db != nil {
 		uuid, err = db.LoadUUID(*hash)
-
+		logger.Info("Loading UUID from database")
+		
 		if err != nil {
+			// logger.Error("Failed to load from DB")
 			return // Error
 		}
 		if len(uuid) > 0 {
@@ -183,6 +185,7 @@ func registrationProcess(apiClient *APIClient, db *Database) (uuid string, err e
 		logger.Debugln("Requesting new UUID")
 		uuid, err = apiClient.Register()
 		if err != nil {
+			logger.Error("api client register")
 			return
 		}
 		if apiClient.IsRegistered() {
