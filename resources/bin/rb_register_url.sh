@@ -122,21 +122,14 @@ echo "127.0.0.1 kafka.service zookeeper.service f2k.service logstash.service fre
 if [ $START -eq 1 ]; then
   if [ -f /etc/chef/client.pem ]; then
     systemctl status chef-client &>/dev/null
-    if [ $? -eq 0 ]; then
-      systemctl restart chef-client
-    else
-      systemctl restart chef-client
-    fi
+    systemctl restart chef-client
   else
     systemctl restart rb-register &>/dev/null
     if [ $? -eq 0 ]; then
       systemctl stop rb-register
-      rm -f /etc/rb-register.db
-      systemctl start rb-register
-    else
-      rm -f /etc/rb-register.db
-      systemctl start rb-register
     fi
+    rm -f /etc/rb-register.db
+    systemctl start rb-register
   fi
 fi
 
