@@ -90,7 +90,8 @@ if [ -f /etc/chef/role-once.json.default ]; then
 
   if [ -f /etc/chef/client.pem ]; then
     systemctl enable chef-client
-    systemctl disable rb-register 
+    # systemctl disable rb-register
+    systemctl stop rb-register
     systemctl start chef-client
     sleep 5
     rb_wakeup_chef.sh
