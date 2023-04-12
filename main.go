@@ -158,7 +158,7 @@ func main() {
 	}
 
 	logger.Info("Halted")
-	select {} // Wait forerver
+	select {} // Wait forever
 }
 
 // registrationProccess tries to register the device. I will send "register"
