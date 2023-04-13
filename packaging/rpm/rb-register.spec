@@ -69,6 +69,8 @@ mkdir -p /var/log/rb-register
 %doc
 
 %changelog
+* Thu Apr 13 2023 Luis Blanco <ljblanco@redborder.com>
+- Service stop instead of disable
 * Wed Mar 30 2022 Miguel Negron <manegron@redborder.com> - 1.1.10
 - Make rb-register generic
 * Fri Nov 26 2021 Javier Rodriguez Gomez <javiercrg@redborder.com> - 0.0.1
