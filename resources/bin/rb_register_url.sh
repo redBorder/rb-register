@@ -119,7 +119,7 @@ sed -i '/kafka.service/d' /etc/hosts
 echo "127.0.0.1 kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service" >> /etc/hosts
 #fi
 
-if [ $TYPE -eq "ips" ]
+if [ $TYPE == "ips" ]
   sed -i '/kafka.service/d' /etc/hosts
   [ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service kafka.service" >> /etc/hosts
 fi
