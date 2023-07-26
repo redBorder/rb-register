@@ -119,12 +119,12 @@ sed -i '/kafka.service/d' /etc/hosts
 
 case $TYPE in
     "proxy")
-        SERVICES_LOCAL = "kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service"
-        SERVICES_GLOBAL = "data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service"
+        SERVICES_LOCAL="kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service"
+        SERVICES_GLOBAL="data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service"
         ;;
     "ips")
-        SERVICES_LOCAL = "zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service"
-        SERVICES_GLOBAL = "data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service kafka.service"
+        SERVICES_LOCAL="zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service"
+        SERVICES_GLOBAL="data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service kafka.service"
         ;;
     *)
         echo "Tipo desconocido: $TYPE"
