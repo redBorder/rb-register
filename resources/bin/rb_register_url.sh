@@ -127,7 +127,7 @@ case $TYPE in
         SERVICES_GLOBAL="data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service kafka.service"
         ;;
     *)
-        echo "Tipo desconocido: $TYPE"
+        echo "Unknown type: $TYPE"
         exit 1
         ;;
 esac
