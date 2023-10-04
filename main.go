@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/capnm/sysinfo"
 	_ "github.com/mattn/go-sqlite3"
 )
