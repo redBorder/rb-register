@@ -6,9 +6,7 @@ License: AGPL 3.0
 URL: https://github.com/redBorder/rb-register
 Source0: %{name}-%{version}.tar.gz
 
-BuildRequires: go = 1.6.3
-BuildRequires: glide rsync gcc git
-BuildRequires:	rsync mlocate
+BuildRequires: go rsync gcc git
 
 Summary: rpm used to install rb-register in a redborder ng
 Group:   Development/Libraries/Go
@@ -20,7 +18,6 @@ Group:   Development/Libraries/Go
 %setup -qn %{name}-%{version}
 
 %build
-
 export GOPATH=${PWD}/gopath
 export PATH=${GOPATH}:${PATH}
 
@@ -69,6 +66,8 @@ mkdir -p /var/log/rb-register
 %doc
 
 %changelog
+* Wed Oct 04 2023 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
+- adapt for go mod
 * Wed Mar 30 2022 Miguel Negron <manegron@redborder.com> - 1.1.10
 - Make rb-register generic
 * Fri Nov 26 2021 Javier Rodriguez Gomez <javiercrg@redborder.com> - 0.0.1
