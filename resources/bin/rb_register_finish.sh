@@ -95,7 +95,10 @@ if [ -f /etc/chef/role-once.json.default ]; then
     sleep 5
     rb_wakeup_chef.sh
   fi
- 
+  
+  title "Configuring cgroups (first time) please wait..."
+  rb_configure_cgroups &>/dev/null 
+  
   title "  finished rb_register_finish.sh ($(date))"
   date > /etc/redborder/sensor-installed.txt
 else
