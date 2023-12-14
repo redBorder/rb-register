@@ -68,6 +68,8 @@ mkdir -p /var/log/rb-register
 %doc
 
 %changelog
+* Thu Dec 14 2023 Miguel Álvarez <malvarez@redborder.com> - 2.0.1-1
+- add cgroups call
 * Wed Oct 04 2023 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
 - adapt for go mod
 * Wed Mar 30 2022 Miguel Negron <manegron@redborder.com> - 1.1.10
