@@ -53,8 +53,9 @@ rm -rf %{buildroot}
 %post
 systemctl daemon-reload
 mkdir -p /var/log/rb-register
-[ -f /usr/lib/redborder/bin/rb_rubywrapper.sh ] && /usr/lib/redborder/bin/rb_rubywrapper.sh -c
-
+if [ -f /usr/lib/redborder/bin/rb_rubywrapper.sh ]; then
+    /usr/lib/redborder/bin/rb_rubywrapper.sh -c || :
+fi
 
 %files
 %defattr(0755,root,root)
@@ -68,6 +69,8 @@ mkdir -p /var/log/rb-register
 %doc
 
 %changelog
+* Wed Jan 24 20243 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.2-1
+- update check of rb_rubywrapper.sh
 * Thu Dec 14 2023 Miguel Álvarez <malvarez@redborder.com> - 2.0.1-1
 - add cgroups call
 * Wed Oct 04 2023 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.0-1
