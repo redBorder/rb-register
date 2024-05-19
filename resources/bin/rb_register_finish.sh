@@ -29,6 +29,7 @@ function title(){
 }
 
 if [ -f /etc/chef/role-once.json.default ]; then
+  start_script=$(date +%s) # Save init time
   title "  started rb_register_finish.sh ($(date))"
 
   #touch /etc/force_create_topics
@@ -98,8 +99,12 @@ if [ -f /etc/chef/role-once.json.default ]; then
   
   title "Configuring cgroups (first time) please wait..."
   rb_configure_cgroups &>/dev/null 
-  
-  title "  finished rb_register_finish.sh ($(date))"
+ 
+  end_script=$(date +%s) # Save finish scrip time
+  runtime=$((end_script-start_script)) # Calculate duration of script
+  runtime_min=$(echo "scale=2; $runtime / 60" | bc -l) # Calculate duration of script in minutes  
+
+  title "  finished rb_register_finish.sh ($(date)) ($runtime_min minutes)"
   date > /etc/redborder/sensor-installed.txt
 else
   echo "ERROR: /etc/chef/role-once.json.default not found"
