@@ -69,7 +69,7 @@ fi
 %doc
 
 %changelog
-* Wed Jan 24 20243 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.2-1
+* Wed Jan 24 2024 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.2-1
 - update check of rb_rubywrapper.sh
 * Thu Dec 14 2023 Miguel Álvarez <malvarez@redborder.com> - 2.0.1-1
 - add cgroups call
