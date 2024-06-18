@@ -6,6 +6,7 @@ License: AGPL 3.0
 URL: https://github.com/redBorder/rb-register
 Source0: %{name}-%{version}.tar.gz
 
+Requires: sqlite
 BuildRequires: go rsync gcc git
 
 Summary: rpm used to install rb-register in a redborder ng
@@ -69,6 +70,8 @@ fi
 %doc
 
 %changelog
+* Mon Jun 17 2024 Rafael Gómez <rgomez@redborder.com> - 2.0.4-1
+- sqlite is now required to install rb-register
 * Wed Jan 24 2024 David Vanhoucke <dvanhoucke@redborder.com> - 2.0.2-1
 - update check of rb_rubywrapper.sh
 * Thu Dec 14 2023 Miguel Álvarez <malvarez@redborder.com> - 2.0.1-1
