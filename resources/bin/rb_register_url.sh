@@ -113,11 +113,27 @@ fi
 
 sed -i '/data.redborder.cluster/d' /etc/hosts
 sed -i '/rbookshelf.s3.redborder.cluster/d' /etc/hosts
-[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service" >> /etc/hosts
-
 sed -i '/kafka.service/d' /etc/hosts
-echo "127.0.0.1 kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service" >> /etc/hosts
+
 #fi
+
+case $TYPE in
+    "proxy")
+        SERVICES_LOCAL="kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service"
+        SERVICES_GLOBAL="data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service"
+        ;;
+    "ips")
+        SERVICES_LOCAL="zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service rb-ale.service rb-nmsp.service rsyslog.service"
+        SERVICES_GLOBAL="data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service kafka.service"
+        ;;
+    *)
+        echo "Unknown type: $TYPE"
+        exit 1
+        ;;
+esac
+
+[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP $SERVICES_GLOBAL" >> /etc/hosts
+echo "127.0.0.1 $SERVICES_LOCAL" >> /etc/hosts
 
 if [ $START -eq 1 ]; then
   if [ -f /etc/chef/client.pem ]; then
