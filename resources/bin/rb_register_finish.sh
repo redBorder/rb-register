@@ -73,7 +73,8 @@ if [ -f /etc/chef/role-once.json.default ]; then
     # rb_run_chef_once.sh   #
     #########################
     #chef-client -c /etc/chef/client.rb --once -s 5 --node-name $(head -n 1 /etc/chef/nodename) -j /etc/chef/role-once.json
-    chef-client -c /etc/chef/client.rb --once -s 5 -j /etc/chef/role-once.json
+    # chef-client -c /etc/chef/client.rb --once -s 5 -j /etc/chef/role-once.json
+    chef-client -c /etc/chef/client.rb --once -s 5
 
     sensor_id=$(head -n 1 /etc/rb-id 2>/dev/null)
     counter=$(($counter +1))
