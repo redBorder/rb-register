@@ -16,7 +16,6 @@
 #######################################################################
 
 RBDOMAIN=""
-CLOUDDOMAIN=""
 INSECURE=0
 DNS=0
 START=1
@@ -27,7 +26,6 @@ source /usr/lib/redborder/lib/rb_functions.sh
 function usage(){
 	echo "ERROR: $0 [-u <url>] [-i] [-h] [-d]"
   	echo "    -u <url>: url to connect to"
-    echo "    -c <cloud_domain>: specify the cloud domain"
   	echo "    -i: do not validate server cert (insecure)"
   	echo "    -d: add dns entries to /etc/hosts in case it is not resolvable and the url is an ip"
     echo "    -f: add the dns entry even if it is a domain (it will try to resolv the ip address)"
@@ -39,11 +37,10 @@ function usage(){
 # Default values
 TYPE="proxy"
 
-while getopts "hu:idsft:c:" opt; do
+while getopts "hu:idsft:" opt; do
   case $opt in
     i) INSECURE=1;;
     u) RBDOMAIN=$OPTARG;;
-    c) CLOUDDOMAIN=$OPTARG;;
     h) usage;;
     d) DNS=1;;
     f) DNSF=1;;
@@ -116,7 +113,7 @@ fi
 
 sed -i '/data.redborder.cluster/d' /etc/hosts
 sed -i '/rbookshelf.s3.redborder.cluster/d' /etc/hosts
-[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.$CLOUDDOMAIN $CLOUDDOMAIN s3.service erchef.service http2k.service http2k.$CLOUDDOMAIN webui.service" >> /etc/hosts
+[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.redborder.cluster rbookshelf.s3.redborder.cluster redborder.cluster s3.service erchef.service http2k.service webui.service" >> /etc/hosts
 
 sed -i '/kafka.service/d' /etc/hosts
 echo "127.0.0.1 kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service redborder-ale.service rb-nmsp.service rsyslog.service" >> /etc/hosts
