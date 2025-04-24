@@ -24,6 +24,7 @@ func getDeviceType(alias string) (deviceType int, err error) {
 		"ips":         32,
 		"ips-generic": 33,
 		"exporter":    41,
+    "intrusion-proxy": 98
 	}
 
 	// Check device type arg
