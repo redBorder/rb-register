@@ -18,13 +18,14 @@ import (
 // it will try to decode as an integer (using atoi). If both methods fails it
 // will return an error.
 func getDeviceType(alias string) (deviceType int, err error) {
-	var aliasMap = map[string]int{
-		"ap":          20,
-		"proxy":       31,
-		"ips":         32,
-		"ips-generic": 33,
-		"exporter":    41,
-	}
+  var aliasMap = map[string]int{
+      "ap":             20,
+      "proxy":          31,
+      "ips":            32,
+      "ips-generic":    33,
+      "exporter":       41,
+      "intrusion-proxy": 98, 
+  }
 
 	// Check device type arg
 	if len(alias) == 0 {
