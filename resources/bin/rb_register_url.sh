@@ -116,7 +116,7 @@ fi
 
 sed -i '/data.redborder.cluster/d' /etc/hosts
 sed -i '/rbookshelf.s3.redborder.cluster/d' /etc/hosts
-[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.$CLOUDDOMAIN $CLOUDDOMAIN s3.service erchef.service erchef.$CLOUDDOMAIN erchef.service.$CLOUDDOMAIN http2k.service http2k.$CLOUDDOMAIN webui.service" >> /etc/hosts
+[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.$CLOUDDOMAIN $CLOUDDOMAIN s3.service.$CLOUDDOMAIN erchef.service erchef.$CLOUDDOMAIN erchef.service.$CLOUDDOMAIN http2k.service http2k.$CLOUDDOMAIN webui.service" >> /etc/hosts
 
 sed -i '/kafka.service/d' /etc/hosts
 echo "127.0.0.1 kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service redborder-ale.service rb-nmsp.service rsyslog.service" >> /etc/hosts
