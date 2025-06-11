@@ -69,11 +69,11 @@ if [ "x$RBDOMAIN" == "x" ]; then
   [ "x$RBDOMAIN" == "x" ] && RBDOMAIN="rblive.redborder.com"
 fi
 
-[ -f /etc/chef/client.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service/organizations/redborder\"|" /etc/chef/client.rb.default
-[ -f /etc/chef/client.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service/organizations/redborder\"|" /etc/chef/client.rb
+[ -f /etc/chef/client.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service.$CLOUDDOMAIN/organizations/redborder\"|" /etc/chef/client.rb.default
+[ -f /etc/chef/client.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service.$CLOUDDOMAIN/organizations/redborder\"|" /etc/chef/client.rb
 
-[ -f /etc/chef/knife.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service/organizations/redborder\"|" /etc/chef/knife.rb.default
-[ -f /etc/chef/knife.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service/organizations/redborder\"|" /etc/chef/knife.rb
+[ -f /etc/chef/knife.rb.default ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service.$CLOUDDOMAIN/organizations/redborder\"|" /etc/chef/knife.rb.default
+[ -f /etc/chef/knife.rb ] && sed -i "s|^chef_server_url.*|chef_server_url  \"https://erchef.service.$CLOUDDOMAIN/organizations/redborder\"|" /etc/chef/knife.rb
 
 [ -f /etc/sysconfig/rb-register.default ] && sed -i "s|^RBDOMAIN=.*|RBDOMAIN=\"$RBDOMAIN\"|" /etc/sysconfig/rb-register.default
 [ -f /etc/sysconfig/rb-register ] && sed -i "s|^RBDOMAIN=.*|RBDOMAIN=\"$RBDOMAIN\"|" /etc/sysconfig/rb-register
@@ -116,7 +116,7 @@ fi
 
 sed -i '/data.redborder.cluster/d' /etc/hosts
 sed -i '/rbookshelf.s3.redborder.cluster/d' /etc/hosts
-[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.$CLOUDDOMAIN $CLOUDDOMAIN s3.service erchef.service http2k.service http2k.$CLOUDDOMAIN webui.service" >> /etc/hosts
+[ "x$RBDOMAINIP" != "x" ] && echo "$RBDOMAINIP data.$CLOUDDOMAIN $CLOUDDOMAIN s3.service.$CLOUDDOMAIN erchef.service erchef.$CLOUDDOMAIN erchef.service.$CLOUDDOMAIN http2k.service http2k.$CLOUDDOMAIN webui.service" >> /etc/hosts
 
 sed -i '/kafka.service/d' /etc/hosts
 echo "127.0.0.1 kafka.service zookeeper.service f2k.service logstash.service freeradius.service n2klocd.service redborder-ale.service rb-nmsp.service rsyslog.service" >> /etc/hosts
