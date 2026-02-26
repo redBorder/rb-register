@@ -143,3 +143,14 @@ if [ $INSECURE -eq 1 ]; then
 else
   echo "enabled"
 fi
+
+if [ -f /etc/rb-uuid ]; then
+  UUID=$(cat /etc/rb-uuid 2>/dev/null)
+  if [ -n "$UUID" ]; then
+    echo "Generated uuid: $UUID at /etc/rb-uuid"
+  else
+    echo "Generated uuid: (file exists but is empty) at /etc/rb-uuid"
+  fi
+else
+  echo "Generated uuid: file not found at /etc/rb-uuid"
+fi
