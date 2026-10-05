@@ -38,6 +38,7 @@ var (
 	hash          *string     // Required hash to perform the registration
 	deviceAlias   *string     // Given alias of the device
 	sleepTime     *int        // Time between requests
+	maxRetries    *int        // Consecutive failed requests allowed before giving up
 	insecure      *bool       // If true, skip SSL verification
 	certFile      *string     // Path to store de certificate
 	dbFile        *string     // File to persist the state
@@ -60,6 +61,7 @@ func init() {
 	apiURL = flag.String("url", "http://localhost", "Protocol and hostname to connect")
 	hash = flag.String("hash", "00000000-0000-0000-0000-000000000000", "Hash to use in the request")
 	sleepTime = flag.Int("sleep", 300, "Time between requests in seconds")
+	maxRetries = flag.Int("retries", 10, "Consecutive failed requests allowed before giving up")
 	deviceAlias = flag.String("type", "", "Type of the registering device")
 	insecure = flag.Bool("no-check-certificate", false, "Dont check if the certificate is valid")
 	certFile = flag.String("cert", "/opt/rb/etc/chef/client.pem", "Certificate file")
@@ -181,13 +183,18 @@ func registrationProcess(apiClient *APIClient, db *Database) (uuid string, err e
 		logger.Debug(uuid)
 	}
 
+	failures := 0
 	for {
 		logger.Debugln("Requesting new UUID")
 		uuid, err = apiClient.Register()
 		if err != nil {
-			logger.Error("api client register")
-			return
+			// The server may be temporarily unavailable (i.e. restarting)
+			if failures++; !waitForRetry("Register", failures, err) {
+				return
+			}
+			continue
 		}
+		failures = 0
 		if apiClient.IsRegistered() {
 			break
 		}
@@ -208,12 +215,18 @@ func registrationProcess(apiClient *APIClient, db *Database) (uuid string, err e
 // response. The first "claimed" response should contain a certificate and
 // a node name that must be saved to disk.
 func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert, nodename string, err error) {
+	failures := 0
 	for {
 		logger.Debugln("Requesting verification")
 		err = apiClient.Verify(uuid)
 		if err != nil {
-			return
+			// The server may be temporarily unavailable (i.e. restarting)
+			if failures++; !waitForRetry("Verify", failures, err) {
+				return
+			}
+			continue
 		}
+		failures = 0
 		if apiClient.IsClaimed() {
 			break
 		}
@@ -233,6 +246,23 @@ func verificationProcess(uuid string, apiClient *APIClient, db *Database) (cert,
 	nodename = apiClient.GetNodename()
 
 	return
+}
+
+// waitForRetry is called after a failed request. If there are retries left it
+// sleeps before the next attempt and returns true, otherwise it returns false
+// so the caller can give up. "failures" is the number of consecutive failed
+// requests, including the current one.
+func waitForRetry(request string, failures int, err error) bool {
+	if failures > *maxRetries {
+		logger.Errorf("%s request failed: %v (no retries left)", request, err)
+		return false
+	}
+
+	logger.Warnf("%s request failed: %v (retry %d/%d in %d seconds)",
+		request, err, failures, *maxRetries, *sleepTime)
+	time.Sleep(time.Duration(*sleepTime) * time.Second)
+
+	return true
 }
 
 func halt() {
