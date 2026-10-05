@@ -8,6 +8,9 @@ EnvironmentFile=/etc/sysconfig/rb-register
 Environment="SLEEP=30"
 ExecStart=/usr/bin/rb_register -url "$URL" -sleep $SLEEP -type $TYPE -hash "$HASH" -script "$SCRIPT" -cert /etc/chef/client.pem -db /etc/rb-register.db -nodename /etc/chef/nodename -log /var/log/rb-register/finish.log $OPTIONS
 Restart=always
+# The finish script runs chef-client inside this unit, and chef stops this
+# service: only signal rb_register so that chef run is not killed with it.
+KillMode=process
 
 [Install]
 WantedBy=multi-user.target
