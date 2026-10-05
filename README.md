@@ -57,6 +57,8 @@ Usage of **rb-register** and default values:
   	File to store nodename
 -pid string
   	File containing PID (default "pid")
+-retries int
+  	Consecutive failed requests allowed before giving up (default 10)
 -script string
   	Script to call after the certificate has been obtained (default "/opt/rb/bin/rb_register_finish.sh")
 -script-log string
